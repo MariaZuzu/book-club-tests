@@ -19,8 +19,7 @@ public class TestData {
             EXPECTED_ERROR_WRONG_TOKEN_TYPE = "Token has wrong type",
             EXPECTED_ERROR_TOKEN_IS_BLACKLISTED = "Token is blacklisted",
             EXPECTED_TOKEN_NOT_VALID_CODE = "token_not_valid",
-            EXPECTED_UNAUTHORIZED_ERROR = "Authentication credentials were not provided.",
-            EXPECTED_ERROR_EXISTING_USER = "A user with that username already exists.";
+            EXPECTED_UNAUTHORIZED_ERROR = "Authentication credentials were not provided.";
 
     public static Faker faker = new Faker();
 
