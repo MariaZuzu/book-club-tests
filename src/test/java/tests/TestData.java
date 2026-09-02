@@ -18,7 +18,9 @@ public class TestData {
             EXPECTED_ERROR_VALID_TOKEN = "Token is invalid",
             EXPECTED_ERROR_WRONG_TOKEN_TYPE = "Token has wrong type",
             EXPECTED_ERROR_TOKEN_IS_BLACKLISTED = "Token is blacklisted",
-            EXPECTED_TOKEN_NOT_VALID_CODE = "token_not_valid";
+            EXPECTED_TOKEN_NOT_VALID_CODE = "token_not_valid",
+            EXPECTED_UNAUTHORIZED_ERROR = "Authentication credentials were not provided.",
+            EXPECTED_ERROR_EXISTING_USER = "A user with that username already exists.";
 
     public static Faker faker = new Faker();
 
@@ -26,5 +28,8 @@ public class TestData {
             username = faker.name().firstName(),
             password = faker.regexify("[A-Za-z0-9]{8}"),
             wrongPassword = password + "1",
-            tooLongPassword = "a".repeat(129);
+            tooLongPassword = "a".repeat(129),
+            firstName = faker.name().firstName(),
+            lastName = faker.name().lastName(),
+            email = faker.internet().emailAddress();
 }
