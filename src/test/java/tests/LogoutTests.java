@@ -10,6 +10,7 @@ import models.registration.RegistrationBodyModel;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static specs.login.LoginSpec.loginRequestSpec;
@@ -34,31 +35,36 @@ public class LogoutTests extends TestBase {
     @Test
     public void successfulLogoutTest() {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
-        given(registrationRequestSpec)
-                .body(registrationData)
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(successfulRegistrationResponseSpec);
 
-        LoginBodyModel data = new LoginBodyModel(td.username, td.password);
-        SuccessfulLoginResponseModel responseLogin = given(loginRequestSpec)
-                .body(data)
-                .when()
-                .post("/auth/token/")
-                .then()
-                .spec(successfulLoginResponseSpec)
-                .extract().as(SuccessfulLoginResponseModel.class);
+        step("Регистрация пользователя", () -> {
+            given(registrationRequestSpec)
+                    .body(registrationData)
+                    .when()
+                    .post("/users/register/")
+                    .then()
+                    .spec(successfulRegistrationResponseSpec);
+        });
 
-        String refreshToken = responseLogin.refresh();
+        String refreshToken = step("Авторизация и получение токена", () -> {
+            LoginBodyModel data = new LoginBodyModel(td.username, td.password);
+            return given(loginRequestSpec)
+                    .body(data)
+                    .when()
+                    .post("/auth/token/")
+                    .then()
+                    .spec(successfulLoginResponseSpec)
+                    .extract().path("refresh");
+        });
 
+        step("Выход пользователя из системы", () -> {
         LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
-        given(logoutRequestSpec)
-                .body(logoutData)
-                .when()
-                .post("/auth/logout/")
-                .then()
-                .spec(successfulLogoutResponseSpec);
+            given(logoutRequestSpec)
+                    .body(logoutData)
+                    .when()
+                    .post("/auth/logout/")
+                    .then()
+                    .spec(successfulLogoutResponseSpec);
+        });
     }
 
     @Test
