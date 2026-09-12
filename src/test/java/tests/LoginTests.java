@@ -4,6 +4,7 @@ import models.login.*;
 import models.registration.RegistrationBodyModel;
 import org.junit.jupiter.api.Test;
 
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.login.LoginSpec.*;
@@ -18,38 +19,43 @@ public class LoginTests extends TestBase {
     @Test
     public void successfulLoginTest() {
 
-        RegistrationBodyModel registrationData =
-                new RegistrationBodyModel(td.username, td.password);
+        step("Регистрация пользователя", () -> {
+            RegistrationBodyModel registrationData =
+                    new RegistrationBodyModel(td.username, td.password);
 
-        given(registrationRequestSpec)
-                .body(registrationData)
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(successfulRegistrationResponseSpec);
+            given(registrationRequestSpec)
+                    .body(registrationData)
+                    .when()
+                    .post("/users/register/")
+                    .then()
+                    .spec(successfulRegistrationResponseSpec);
+        });
 
-        LoginBodyModel data = new LoginBodyModel(td.username, td.password);
-        SuccessfulLoginResponseModel loginResponse = given(loginRequestSpec)
-                .body(data)
-                .when()
-                .post("/auth/token/")
-                .then()
-                .spec(successfulLoginResponseSpec)
-                .extract().as(SuccessfulLoginResponseModel.class);
+        step("Авторизация и получение access и refresh token", () -> {
+            LoginBodyModel data = new LoginBodyModel(td.username, td.password);
+            SuccessfulLoginResponseModel loginResponse = given(loginRequestSpec)
+                    .body(data)
+                    .when()
+                    .post("/auth/token/")
+                    .then()
+                    .spec(successfulLoginResponseSpec)
+                    .extract().as(SuccessfulLoginResponseModel.class);
 
-        String expectedTokenPart = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
-        String actualAccess = loginResponse.access();
-        String actualRefresh = loginResponse.refresh();
+            String expectedTokenPart = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
+            String actualAccess = loginResponse.access();
+            String actualRefresh = loginResponse.refresh();
 
-        assertThat(actualAccess).startsWith(expectedTokenPart);
-        assertThat(actualRefresh).startsWith(expectedTokenPart);
-        assertThat(actualAccess).isNotEqualTo(actualRefresh);
+            assertThat(actualAccess).startsWith(expectedTokenPart);
+            assertThat(actualRefresh).startsWith(expectedTokenPart);
+            assertThat(actualAccess).isNotEqualTo(actualRefresh);
+        });
     }
 
-        @Test
-        public void invalidCredentialsLoginTest() {
-            LoginBodyModel data = new LoginBodyModel(td.username, td.wrongPassword);
+    @Test
+    public void invalidCredentialsLoginTest() {
 
+        step("Ошибка при авторизации с неверным password", () -> {
+            LoginBodyModel data = new LoginBodyModel(td.username, td.wrongPassword);
             InvalidCredentialsLoginResponseModel loginResponse = given(loginRequestSpec)
                     .body(data)
                     .when()
@@ -60,11 +66,13 @@ public class LoginTests extends TestBase {
 
             String actualErrorInvalidUsernameOrPassword = loginResponse.detail();
             assertThat(actualErrorInvalidUsernameOrPassword).isEqualTo(EXPECTED_ERROR_INVALID_USERNAME_OR_PASSWORD);
+        });
+    }
 
-        }
+    @Test
+    public void emptyRefreshTokenLoginNegativeTest() {
 
-        @Test
-        public void emptyRefreshTokenLoginNegativeTest() {
+        step("Ошибка при обновлении токена без refresh token", () -> {
             WithoutRefreshTokenLoginBodyModel emptyRefreshToken = new WithoutRefreshTokenLoginBodyModel();
             WithoutRefreshTokenLoginResponseModel emptyRefreshResponseModel = given(loginRequestSpec)
                     .body(emptyRefreshToken)
@@ -76,64 +84,72 @@ public class LoginTests extends TestBase {
 
             String actualRefresh = emptyRefreshResponseModel.refresh().get(0);
             assertThat(actualRefresh).isEqualTo(EXPECTED_REQUIRED_FIELD);
-        }
+        });
+    }
 
     @Test
     public void invalidRefreshTokenLoginNegativeTest() {
-        InvalidRefreshTokenBodyModel invalidTokenBodyModel = new InvalidRefreshTokenBodyModel(td.EXPECTED_ERROR_INVALID_REFRESH_TOKEN);
-        InvalidRefreshTokenResponseModel loginResponse = given(loginRequestSpec)
-                .body(invalidTokenBodyModel)
-                .when()
-                .post("/auth/token/refresh/")
-                .then()
-                .spec(invalidRefreshTokenResponseSpec)
-                .extract().as(InvalidRefreshTokenResponseModel.class);
 
-        String actualDetailInvalidRefreshToken = loginResponse.detail();
-        String actualCodeInvalidRefreshToken = loginResponse.code();
+        step("Ошибка при обновлении токена с невалидным refresh token", () -> {
+            InvalidRefreshTokenBodyModel invalidTokenBodyModel = new InvalidRefreshTokenBodyModel(td.EXPECTED_ERROR_INVALID_REFRESH_TOKEN);
+            InvalidRefreshTokenResponseModel loginResponse = given(loginRequestSpec)
+                    .body(invalidTokenBodyModel)
+                    .when()
+                    .post("/auth/token/refresh/")
+                    .then()
+                    .spec(invalidRefreshTokenResponseSpec)
+                    .extract().as(InvalidRefreshTokenResponseModel.class);
 
-        assertThat(actualDetailInvalidRefreshToken).isEqualTo(EXPECTED_ERROR_VALID_TOKEN);
-        assertThat(actualCodeInvalidRefreshToken).isEqualTo(EXPECTED_TOKEN_NOT_VALID_CODE);
+            String actualDetailInvalidRefreshToken = loginResponse.detail();
+            String actualCodeInvalidRefreshToken = loginResponse.code();
+
+            assertThat(actualDetailInvalidRefreshToken).isEqualTo(EXPECTED_ERROR_VALID_TOKEN);
+            assertThat(actualCodeInvalidRefreshToken).isEqualTo(EXPECTED_TOKEN_NOT_VALID_CODE);
+        });
     }
 
     @Test
     public void accessTokenInsteadRefreshTokenLoginNegativeTest() {
-        RegistrationBodyModel registrationData =
-                new RegistrationBodyModel(td.username, td.password);
+        step("Регистрация пользователя", () -> {
+            RegistrationBodyModel registrationData =
+                    new RegistrationBodyModel(td.username, td.password);
 
-        given(registrationRequestSpec)
+            given(registrationRequestSpec)
 
-                .body(registrationData)
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(successfulRegistrationResponseSpec);
+                    .body(registrationData)
+                    .when()
+                    .post("/users/register/")
+                    .then()
+                    .spec(successfulRegistrationResponseSpec);
+        });
 
-        LoginBodyModel data = new LoginBodyModel(td.username, td.password);
+        String accessToken = step("Авторизация и получение access token", () -> {
+            LoginBodyModel data = new LoginBodyModel(td.username, td.password);
+            return given(loginRequestSpec)
+                    .body(data)
+                    .when()
+                    .post("/auth/token/")
+                    .then()
+                    .spec(successfulLoginResponseSpec)
+                    .extract().path("access");
+        });
 
-        SuccessfulLoginResponseModel refreshResponse = given(loginRequestSpec)
-                .body(data)
-                .when()
-                .post("/auth/token/")
-                .then()
-                .spec(successfulLoginResponseSpec)
-                .extract().as(SuccessfulLoginResponseModel.class);
-        String accessToken = refreshResponse.access();
+        step("Ошибка при обновлении токена с access token вместо refresh token", () -> {
+            InvalidRefreshTokenBodyModel invalidTokenBodyModel = new InvalidRefreshTokenBodyModel(accessToken);
+            InvalidRefreshTokenResponseModel loginResponse = given(loginRequestSpec)
+                    .body(invalidTokenBodyModel)
+                    .when()
+                    .post("/auth/token/refresh/")
+                    .then()
+                    .spec(invalidRefreshTokenResponseSpec)
+                    .extract().as(InvalidRefreshTokenResponseModel.class);
 
-        InvalidRefreshTokenBodyModel invalidTokenBodyModel = new InvalidRefreshTokenBodyModel(accessToken);
-        InvalidRefreshTokenResponseModel loginResponse = given(loginRequestSpec)
-                .body(invalidTokenBodyModel)
-                .when()
-                .post("/auth/token/refresh/")
-                .then()
-                .spec(invalidRefreshTokenResponseSpec)
-                .extract().as(InvalidRefreshTokenResponseModel.class);
+            String actualDetailInvalidRefreshToken = loginResponse.detail();
+            String actualCodeInvalidRefreshToken = loginResponse.code();
 
-        String actualDetailInvalidRefreshToken = loginResponse.detail();
-        String actualCodeInvalidRefreshToken = loginResponse.code();
-
-        assertThat(actualDetailInvalidRefreshToken).isEqualTo(EXPECTED_ERROR_WRONG_TOKEN_TYPE);
-        assertThat(actualCodeInvalidRefreshToken).isEqualTo(EXPECTED_TOKEN_NOT_VALID_CODE);
+            assertThat(actualDetailInvalidRefreshToken).isEqualTo(EXPECTED_ERROR_WRONG_TOKEN_TYPE);
+            assertThat(actualCodeInvalidRefreshToken).isEqualTo(EXPECTED_TOKEN_NOT_VALID_CODE);
+        });
     }
 
-    }
+}

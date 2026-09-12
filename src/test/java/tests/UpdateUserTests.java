@@ -7,6 +7,7 @@ import models.user.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.Assertions.assertThat;
 import static specs.login.LoginSpec.loginRequestSpec;
@@ -30,196 +31,219 @@ public class UpdateUserTests extends TestBase {
     @Test
     public void successfulFullUpdateUserWithPutTest() {
 
-        RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
-        given(registrationRequestSpec)
-                .body(registrationData)
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(successfulRegistrationResponseSpec);
+        step("Регистрация пользователя", () -> {
+            RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
+            given(registrationRequestSpec)
+                    .body(registrationData)
+                    .when()
+                    .post("/users/register/")
+                    .then()
+                    .spec(successfulRegistrationResponseSpec);
+        });
 
-        LoginBodyModel dataLogin = new LoginBodyModel(td.username, td.password);
-        SuccessfulLoginResponseModel responseLogin = given(loginRequestSpec)
-                .body(dataLogin)
-                .when()
-                .post("/auth/token/")
-                .then()
-                .spec(successfulLoginResponseSpec)
-                .extract().as(SuccessfulLoginResponseModel.class);
+        String accessToken = step("Авторизация и получение access token", () -> {
+            LoginBodyModel dataLogin = new LoginBodyModel(td.username, td.password);
+            return given(loginRequestSpec)
+                    .body(dataLogin)
+                    .when()
+                    .post("/auth/token/")
+                    .then()
+                    .spec(successfulLoginResponseSpec)
+                    .extract().path("access");
+        });
 
-        String accessToken = responseLogin.access();
+        step("Полное обновление данных пользователя через PUT и получение ответа", () -> {
+            UpdateUserBodyModel dataUpdateUser = new UpdateUserBodyModel(td.username, td.firstName,
+                    td.lastName, td.email);
+            SuccessfulUpdateUserResponseModel responseUpdateUser =
+                    given(updateUserRequestSpec)
+                            .header("Authorization", "Bearer " + accessToken)
+                            .body(dataUpdateUser)
+                            .when()
+                            .put("/users/me/")
+                            .then()
+                            .spec(successfulUpdateUserResponseSpec)
+                            .extract().as(SuccessfulUpdateUserResponseModel.class);
 
-        UpdateUserBodyModel dataUpdateUser = new UpdateUserBodyModel(td.username, td.firstName,
-                td.lastName, td.email);
-        SuccessfulUpdateUserResponseModel responseUpdateUser =
-                given(updateUserRequestSpec)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .body(dataUpdateUser)
-                        .when()
-                        .put("/users/me/")
-                        .then()
-                        .spec(successfulUpdateUserResponseSpec)
-                        .extract().as(SuccessfulUpdateUserResponseModel.class);
+            String actualUsername = responseUpdateUser.username();
+            String actualFirstName = responseUpdateUser.firstName();
+            String actualLastName = responseUpdateUser.lastName();
+            String actualEmail = responseUpdateUser.email();
 
-        String actualUsername = responseUpdateUser.username();
-        String actualFirstName = responseUpdateUser.firstName();
-        String actualLastName = responseUpdateUser.lastName();
-        String actualEmail = responseUpdateUser.email();
-
-        assertThat(responseUpdateUser.id()).isPositive();
-        assertThat(actualUsername).isEqualTo(td.username);
-        assertThat(actualFirstName).isEqualTo(td.firstName);
-        assertThat(actualLastName).isEqualTo(td.lastName);
-        assertThat(actualEmail).isEqualTo(td.email);
-        assertThat(responseUpdateUser.remoteAddr()).isNotBlank();
+            assertThat(responseUpdateUser.id()).isPositive();
+            assertThat(actualUsername).isEqualTo(td.username);
+            assertThat(actualFirstName).isEqualTo(td.firstName);
+            assertThat(actualLastName).isEqualTo(td.lastName);
+            assertThat(actualEmail).isEqualTo(td.email);
+            assertThat(responseUpdateUser.remoteAddr()).isNotBlank();
+        });
     }
 
     @Test
     public void successfulFullUpdateUserWithPatchTest() {
-        RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
-        given(registrationRequestSpec)
-                .body(registrationData)
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(successfulRegistrationResponseSpec);
 
-        LoginBodyModel dataLogin = new LoginBodyModel(td.username, td.password);
-        SuccessfulLoginResponseModel responseLogin = given(loginRequestSpec)
-                .body(dataLogin)
-                .when()
-                .post("/auth/token/")
-                .then()
-                .spec(successfulLoginResponseSpec)
-                .extract().as(SuccessfulLoginResponseModel.class);
+        step("Регистрация пользователя", () -> {
+            RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
+            given(registrationRequestSpec)
+                    .body(registrationData)
+                    .when()
+                    .post("/users/register/")
+                    .then()
+                    .spec(successfulRegistrationResponseSpec);
+        });
 
-        String accessToken = responseLogin.access();
+        String accessToken = step("Авторизация и получение access token", () -> {
+            LoginBodyModel dataLogin = new LoginBodyModel(td.username, td.password);
+            return given(loginRequestSpec)
+                    .body(dataLogin)
+                    .when()
+                    .post("/auth/token/")
+                    .then()
+                    .spec(successfulLoginResponseSpec)
+                    .extract().path("access");
+        });
 
-        UpdateUserBodyModel dataUpdateUser = new UpdateUserBodyModel(td.username, td.firstName,
-                td.lastName, td.email);
-        SuccessfulUpdateUserResponseModel responseUpdateUser =
-                given(updateUserRequestSpec)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .body(dataUpdateUser)
-                        .when()
-                        .patch("/users/me/")
-                        .then()
-                        .spec(successfulUpdateUserResponseSpec)
-                        .extract().as(SuccessfulUpdateUserResponseModel.class);
+        step("Обновление данных пользователя через PATCH и получение ответа", () -> {
+            UpdateUserBodyModel dataUpdateUser = new UpdateUserBodyModel(td.username, td.firstName,
+                    td.lastName, td.email);
+            SuccessfulUpdateUserResponseModel responseUpdateUser =
+                    given(updateUserRequestSpec)
+                            .header("Authorization", "Bearer " + accessToken)
+                            .body(dataUpdateUser)
+                            .when()
+                            .patch("/users/me/")
+                            .then()
+                            .spec(successfulUpdateUserResponseSpec)
+                            .extract().as(SuccessfulUpdateUserResponseModel.class);
 
-        String actualUsername = responseUpdateUser.username();
-        String actualFirstName = responseUpdateUser.firstName();
-        String actualLastName = responseUpdateUser.lastName();
-        String actualEmail = responseUpdateUser.email();
+            String actualUsername = responseUpdateUser.username();
+            String actualFirstName = responseUpdateUser.firstName();
+            String actualLastName = responseUpdateUser.lastName();
+            String actualEmail = responseUpdateUser.email();
 
-        assertThat(responseUpdateUser.id()).isPositive();
-        assertThat(actualUsername).isEqualTo(td.username);
-        assertThat(actualFirstName).isEqualTo(td.firstName);
-        assertThat(actualLastName).isEqualTo(td.lastName);
-        assertThat(actualEmail).isEqualTo(td.email);
-        assertThat(responseUpdateUser.remoteAddr()).isNotBlank();
+            assertThat(responseUpdateUser.id()).isPositive();
+            assertThat(actualUsername).isEqualTo(td.username);
+            assertThat(actualFirstName).isEqualTo(td.firstName);
+            assertThat(actualLastName).isEqualTo(td.lastName);
+            assertThat(actualEmail).isEqualTo(td.email);
+            assertThat(responseUpdateUser.remoteAddr()).isNotBlank();
+        });
     }
 
     @Test
     public void successfulPartialUpdateUserWithPatchTest() {
-        RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
-        given(registrationRequestSpec)
-                .body(registrationData)
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(successfulRegistrationResponseSpec);
 
-        LoginBodyModel dataLogin = new LoginBodyModel(td.username, td.password);
-        SuccessfulLoginResponseModel responseLogin = given(loginRequestSpec)
-                .body(dataLogin)
-                .when()
-                .post("/auth/token/")
-                .then()
-                .spec(successfulLoginResponseSpec)
-                .extract().as(SuccessfulLoginResponseModel.class);
+        step("Регистрация пользователя", () -> {
+            RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
+            given(registrationRequestSpec)
+                    .body(registrationData)
+                    .when()
+                    .post("/users/register/")
+                    .then()
+                    .spec(successfulRegistrationResponseSpec);
+        });
 
-        String accessToken = responseLogin.access();
+        String accessToken = step("Авторизация и получение access token", () -> {
+            LoginBodyModel dataLogin = new LoginBodyModel(td.username, td.password);
+            return given(loginRequestSpec)
+                    .body(dataLogin)
+                    .when()
+                    .post("/auth/token/")
+                    .then()
+                    .spec(successfulLoginResponseSpec)
+                    .extract().path("access");
+        });
 
-        PartialUpdateUserBodyModel dataUpdateUser =
-                new PartialUpdateUserBodyModel(td.username, td.email);
-        SuccessfulUpdateUserResponseModel responseUpdateUser =
-                given(updateUserRequestSpec)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .body(dataUpdateUser)
-                        .when()
-                        .patch("/users/me/")
-                        .then()
-                        .spec(successfulUpdateUserResponseSpec)
-                        .extract().as(SuccessfulUpdateUserResponseModel.class);
+        step("Частичное обновление данных пользователя через PATCH и получение ответа", () -> {
+            PartialUpdateUserBodyModel dataUpdateUser =
+                    new PartialUpdateUserBodyModel(td.username, td.email);
+            SuccessfulUpdateUserResponseModel responseUpdateUser =
+                    given(updateUserRequestSpec)
+                            .header("Authorization", "Bearer " + accessToken)
+                            .body(dataUpdateUser)
+                            .when()
+                            .patch("/users/me/")
+                            .then()
+                            .spec(successfulUpdateUserResponseSpec)
+                            .extract().as(SuccessfulUpdateUserResponseModel.class);
 
-        String actualUsername = responseUpdateUser.username();
-        String actualEmail = responseUpdateUser.email();
+            String actualUsername = responseUpdateUser.username();
+            String actualEmail = responseUpdateUser.email();
 
-        assertThat(responseUpdateUser.id()).isPositive();
-        assertThat(actualUsername).isEqualTo(td.username);
-        assertThat(actualEmail).isEqualTo(td.email);
-        assertThat(responseUpdateUser.remoteAddr()).isNotBlank();
+            assertThat(responseUpdateUser.id()).isPositive();
+            assertThat(actualUsername).isEqualTo(td.username);
+            assertThat(actualEmail).isEqualTo(td.email);
+            assertThat(responseUpdateUser.remoteAddr()).isNotBlank();
+        });
     }
 
     @Test
     public void partialUpdateUserWithPutNegativeTest() {
 
-        RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
-        given(registrationRequestSpec)
-                .body(registrationData)
-                .when()
-                .post("/users/register/")
-                .then()
-                .spec(successfulRegistrationResponseSpec);
+        step("Регистрация пользователя", () -> {
+            RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
+            given(registrationRequestSpec)
+                    .body(registrationData)
+                    .when()
+                    .post("/users/register/")
+                    .then()
+                    .spec(successfulRegistrationResponseSpec);
+        });
 
-        LoginBodyModel dataLogin = new LoginBodyModel(td.username, td.password);
-        SuccessfulLoginResponseModel responseLogin = given(loginRequestSpec)
-                .body(dataLogin)
-                .when()
-                .post("/auth/token/")
-                .then()
-                .spec(successfulLoginResponseSpec)
-                .extract().as(SuccessfulLoginResponseModel.class);
+        String accessToken = step("Авторизация и получение access token", () -> {
+            LoginBodyModel dataLogin = new LoginBodyModel(td.username, td.password);
 
-        String accessToken = responseLogin.access();
+            SuccessfulLoginResponseModel responseLogin = given(loginRequestSpec)
+                    .body(dataLogin)
+                    .when()
+                    .post("/auth/token/")
+                    .then()
+                    .spec(successfulLoginResponseSpec)
+                    .extract().as(SuccessfulLoginResponseModel.class);
 
-        PartialUpdateUserBodyModel dataUpdateUser =
-                new PartialUpdateUserBodyModel(td.username, td.email);
-        UnsuccessfulPartialUpdateUserResponseModel responseUpdateUser =
-                given(updateUserRequestSpec)
-                        .header("Authorization", "Bearer " + accessToken)
-                        .body(dataUpdateUser)
-                        .when()
-                        .put("/users/me/")
-                        .then()
-                        .spec(unsuccessfulPartialUpdateUserResponseSpec)
-                        .extract().as(UnsuccessfulPartialUpdateUserResponseModel.class);
+            return responseLogin.access();
+        });
 
-        String actualFirstName = responseUpdateUser.firstName().get(0);
-        String actualLastName = responseUpdateUser.lastName().get(0);
+        step("Ошибка при частичном обновлении пользователя через PUT", () -> {
+            PartialUpdateUserBodyModel dataUpdateUser =
+                    new PartialUpdateUserBodyModel(td.username, td.email);
+            UnsuccessfulPartialUpdateUserResponseModel responseUpdateUser =
+                    given(updateUserRequestSpec)
+                            .header("Authorization", "Bearer " + accessToken)
+                            .body(dataUpdateUser)
+                            .when()
+                            .put("/users/me/")
+                            .then()
+                            .spec(unsuccessfulPartialUpdateUserResponseSpec)
+                            .extract().as(UnsuccessfulPartialUpdateUserResponseModel.class);
 
-        assertThat(actualFirstName).isEqualTo(EXPECTED_REQUIRED_FIELD);
-        assertThat(actualLastName).isEqualTo(EXPECTED_REQUIRED_FIELD);
-        assertThat(responseUpdateUser.username()).isNull();
-        assertThat(responseUpdateUser.email()).isNull();
+            String actualFirstName = responseUpdateUser.firstName().get(0);
+            String actualLastName = responseUpdateUser.lastName().get(0);
+
+            assertThat(actualFirstName).isEqualTo(EXPECTED_REQUIRED_FIELD);
+            assertThat(actualLastName).isEqualTo(EXPECTED_REQUIRED_FIELD);
+            assertThat(responseUpdateUser.username()).isNull();
+            assertThat(responseUpdateUser.email()).isNull();
+        });
     }
 
     @Test
     public void withoutRequiredAuthorizationHeaderUpdateUserNegativeTest() {
 
-        UpdateUserBodyModel dataUpdateUser = new UpdateUserBodyModel(td.username, td.firstName,
-                td.lastName, td.email);
-        UnauthorizedResponseModel responseUpdateUser =
-                given(updateUserRequestSpec)
-                        .body(dataUpdateUser)
-                        .when()
-                        .put("/users/me/")
-                        .then()
-                        .spec(unauthorizedResponseSpec)
-                        .extract().as(UnauthorizedResponseModel.class);
+        step("Ошибка при обновлении пользователя без Authorization header", () -> {
+            UpdateUserBodyModel dataUpdateUser = new UpdateUserBodyModel(td.username, td.firstName,
+                    td.lastName, td.email);
+            UnauthorizedResponseModel responseUpdateUser =
+                    given(updateUserRequestSpec)
+                            .body(dataUpdateUser)
+                            .when()
+                            .put("/users/me/")
+                            .then()
+                            .spec(unauthorizedResponseSpec)
+                            .extract().as(UnauthorizedResponseModel.class);
 
-        String actualDetail = responseUpdateUser.detail();
-        assertThat(actualDetail).isEqualTo(EXPECTED_UNAUTHORIZED_ERROR);
+            String actualDetail = responseUpdateUser.detail();
+            assertThat(actualDetail).isEqualTo(EXPECTED_UNAUTHORIZED_ERROR);
+        });
     }
 }
