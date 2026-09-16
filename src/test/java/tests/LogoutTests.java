@@ -100,41 +100,41 @@ public class LogoutTests extends TestBase {
                     .spec(successfulLogoutResponseSpec);
         });
 
-        step("Ошибка при повторном выходе пользователя из системы с тем же refresh token", () -> {
+        WrongReusedRefreshTokenResponseModel logoutResponse =
+                step("Ошибка при повторном выходе пользователя из системы с тем же refresh token", () -> {
             LogoutBodyModel logoutSecondData = new LogoutBodyModel(refreshToken);
-            WrongReusedRefreshTokenResponseModel logoutResponse =
-                    given(logoutRequestSpec)
+                    return given(logoutRequestSpec)
                             .body(logoutSecondData)
                             .when()
                             .post("/auth/logout/")
                             .then()
                             .spec(invalidTokenLogoutResponseSpec)
                             .extract().as(WrongReusedRefreshTokenResponseModel.class);
+        });
 
-            String actualDetailReusedRefreshToken = logoutResponse.detail();
-            String actualCodeReusedRefreshToken = logoutResponse.code();
-            assertThat(actualDetailReusedRefreshToken).isEqualTo(EXPECTED_ERROR_TOKEN_IS_BLACKLISTED);
-            assertThat(actualCodeReusedRefreshToken).isEqualTo(EXPECTED_TOKEN_NOT_VALID_CODE);
+            step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(logoutResponse.detail()).isEqualTo(EXPECTED_ERROR_TOKEN_IS_BLACKLISTED);
+            assertThat(logoutResponse.code()).isEqualTo(EXPECTED_TOKEN_NOT_VALID_CODE);
         });
     }
 
     @Test
     public void logoutWithoutRefreshTokenNegativeTest() {
 
-        step("Выход пользователя из системы без refresh token", () -> {
+        WithoutRefreshTokenLogoutResponseModel logoutResponse =
+                step("Выход пользователя из системы без refresh token", () -> {
             WithoutRefreshTokenLogoutBodyModel logoutData = new WithoutRefreshTokenLogoutBodyModel();
-            WithoutRefreshTokenLogoutResponseModel logoutResponse =
-                    given(logoutRequestSpec)
-                            .body(logoutData)
-                            .when()
-                            .post("/auth/logout/")
-                            .then()
-                            .spec(withoutRefreshTokenLogoutResponseSpec)
-                            .extract().as(WithoutRefreshTokenLogoutResponseModel.class);
+            return given(logoutRequestSpec)
+                    .body(logoutData)
+                    .when()
+                    .post("/auth/logout/")
+                    .then()
+                    .spec(withoutRefreshTokenLogoutResponseSpec)
+                    .extract().as(WithoutRefreshTokenLogoutResponseModel.class);
+        });
 
-
-            String actualErrorWithoutRefreshToken = logoutResponse.refresh().get(0);
-            assertThat(actualErrorWithoutRefreshToken).isEqualTo(EXPECTED_REQUIRED_FIELD);
+        step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(logoutResponse.refresh().get(0)).isEqualTo(EXPECTED_REQUIRED_FIELD);
         });
     }
 
@@ -162,21 +162,21 @@ public class LogoutTests extends TestBase {
                     .extract().path("access");
         });
 
-        step("Ошибка при выходе пользователя из системы с access token вместо refresh token", () -> {
+        WrongReusedRefreshTokenResponseModel logoutResponse =
+                step("Ошибка при выходе пользователя из системы с access token вместо refresh token", () -> {
             LogoutBodyModel logoutData = new LogoutBodyModel(accessToken);
-            WrongReusedRefreshTokenResponseModel logoutResponse =
-                    given(logoutRequestSpec)
+            return given(logoutRequestSpec)
                             .body(logoutData)
                             .when()
                             .post("/auth/logout/")
                             .then()
                             .spec(invalidTokenLogoutResponseSpec)
                             .extract().as(WrongReusedRefreshTokenResponseModel.class);
+        });
 
-            String actualDetailReusedRefreshToken = logoutResponse.detail();
-            String actualCodeReusedRefreshToken = logoutResponse.code();
-            assertThat(actualDetailReusedRefreshToken).isEqualTo(EXPECTED_ERROR_WRONG_TOKEN_TYPE);
-            assertThat(actualCodeReusedRefreshToken).isEqualTo(EXPECTED_TOKEN_NOT_VALID_CODE);
+            step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(logoutResponse.detail()).isEqualTo(EXPECTED_ERROR_WRONG_TOKEN_TYPE);
+            assertThat(logoutResponse.code()).isEqualTo(EXPECTED_TOKEN_NOT_VALID_CODE);
         });
     }
 

@@ -52,29 +52,26 @@ public class UpdateUserTests extends TestBase {
                     .extract().path("access");
         });
 
-        step("Полное обновление данных пользователя через PUT и получение ответа", () -> {
+        SuccessfulUpdateUserResponseModel responseUpdateUser = step("Полное обновление данных пользователя через PUT", () -> {
             UpdateUserBodyModel dataUpdateUser = new UpdateUserBodyModel(td.username, td.firstName,
                     td.lastName, td.email);
-            SuccessfulUpdateUserResponseModel responseUpdateUser =
-                    given(updateUserRequestSpec)
-                            .header("Authorization", "Bearer " + accessToken)
-                            .body(dataUpdateUser)
-                            .when()
-                            .put("/users/me/")
-                            .then()
-                            .spec(successfulUpdateUserResponseSpec)
-                            .extract().as(SuccessfulUpdateUserResponseModel.class);
 
-            String actualUsername = responseUpdateUser.username();
-            String actualFirstName = responseUpdateUser.firstName();
-            String actualLastName = responseUpdateUser.lastName();
-            String actualEmail = responseUpdateUser.email();
+            return given(updateUserRequestSpec)
+                    .header("Authorization", "Bearer " + accessToken)
+                    .body(dataUpdateUser)
+                    .when()
+                    .put("/users/me/")
+                    .then()
+                    .spec(successfulUpdateUserResponseSpec)
+                    .extract().as(SuccessfulUpdateUserResponseModel.class);
+        });
 
+        step("Проверка соответствия обновленных данных ожидаемым", () -> {
             assertThat(responseUpdateUser.id()).isPositive();
-            assertThat(actualUsername).isEqualTo(td.username);
-            assertThat(actualFirstName).isEqualTo(td.firstName);
-            assertThat(actualLastName).isEqualTo(td.lastName);
-            assertThat(actualEmail).isEqualTo(td.email);
+            assertThat(responseUpdateUser.username()).isEqualTo(td.username);
+            assertThat(responseUpdateUser.firstName()).isEqualTo(td.firstName);
+            assertThat(responseUpdateUser.lastName()).isEqualTo(td.lastName);
+            assertThat(responseUpdateUser.email()).isEqualTo(td.email);
             assertThat(responseUpdateUser.remoteAddr()).isNotBlank();
         });
     }
@@ -103,11 +100,10 @@ public class UpdateUserTests extends TestBase {
                     .extract().path("access");
         });
 
-        step("Обновление данных пользователя через PATCH и получение ответа", () -> {
+        SuccessfulUpdateUserResponseModel responseUpdateUser = step("Обновление данных пользователя через PATCH", () -> {
             UpdateUserBodyModel dataUpdateUser = new UpdateUserBodyModel(td.username, td.firstName,
                     td.lastName, td.email);
-            SuccessfulUpdateUserResponseModel responseUpdateUser =
-                    given(updateUserRequestSpec)
+                     return given(updateUserRequestSpec)
                             .header("Authorization", "Bearer " + accessToken)
                             .body(dataUpdateUser)
                             .when()
@@ -115,17 +111,14 @@ public class UpdateUserTests extends TestBase {
                             .then()
                             .spec(successfulUpdateUserResponseSpec)
                             .extract().as(SuccessfulUpdateUserResponseModel.class);
+        });
 
-            String actualUsername = responseUpdateUser.username();
-            String actualFirstName = responseUpdateUser.firstName();
-            String actualLastName = responseUpdateUser.lastName();
-            String actualEmail = responseUpdateUser.email();
-
+        step("Проверка соответствия обновленных данных ожидаемым", () -> {
             assertThat(responseUpdateUser.id()).isPositive();
-            assertThat(actualUsername).isEqualTo(td.username);
-            assertThat(actualFirstName).isEqualTo(td.firstName);
-            assertThat(actualLastName).isEqualTo(td.lastName);
-            assertThat(actualEmail).isEqualTo(td.email);
+            assertThat(responseUpdateUser.username()).isEqualTo(td.username);
+            assertThat(responseUpdateUser.firstName()).isEqualTo(td.firstName);
+            assertThat(responseUpdateUser.lastName()).isEqualTo(td.lastName);
+            assertThat(responseUpdateUser.email()).isEqualTo(td.email);
             assertThat(responseUpdateUser.remoteAddr()).isNotBlank();
         });
     }
@@ -154,11 +147,10 @@ public class UpdateUserTests extends TestBase {
                     .extract().path("access");
         });
 
-        step("Частичное обновление данных пользователя через PATCH и получение ответа", () -> {
+        SuccessfulUpdateUserResponseModel responseUpdateUser = step("Частичное обновление данных пользователя через PATCH", () -> {
             PartialUpdateUserBodyModel dataUpdateUser =
                     new PartialUpdateUserBodyModel(td.username, td.email);
-            SuccessfulUpdateUserResponseModel responseUpdateUser =
-                    given(updateUserRequestSpec)
+            return given(updateUserRequestSpec)
                             .header("Authorization", "Bearer " + accessToken)
                             .body(dataUpdateUser)
                             .when()
@@ -166,13 +158,12 @@ public class UpdateUserTests extends TestBase {
                             .then()
                             .spec(successfulUpdateUserResponseSpec)
                             .extract().as(SuccessfulUpdateUserResponseModel.class);
+        });
 
-            String actualUsername = responseUpdateUser.username();
-            String actualEmail = responseUpdateUser.email();
-
+            step("Проверка соответствия обновленных данных ожидаемым", () -> {
             assertThat(responseUpdateUser.id()).isPositive();
-            assertThat(actualUsername).isEqualTo(td.username);
-            assertThat(actualEmail).isEqualTo(td.email);
+            assertThat(responseUpdateUser.username()).isEqualTo(td.username);
+            assertThat(responseUpdateUser.email()).isEqualTo(td.email);
             assertThat(responseUpdateUser.remoteAddr()).isNotBlank();
         });
     }
@@ -204,11 +195,10 @@ public class UpdateUserTests extends TestBase {
             return responseLogin.access();
         });
 
-        step("Ошибка при частичном обновлении пользователя через PUT", () -> {
+        UnsuccessfulPartialUpdateUserResponseModel responseUpdateUser = step("Ошибка при частичном обновлении пользователя через PUT", () -> {
             PartialUpdateUserBodyModel dataUpdateUser =
                     new PartialUpdateUserBodyModel(td.username, td.email);
-            UnsuccessfulPartialUpdateUserResponseModel responseUpdateUser =
-                    given(updateUserRequestSpec)
+                    return given(updateUserRequestSpec)
                             .header("Authorization", "Bearer " + accessToken)
                             .body(dataUpdateUser)
                             .when()
@@ -216,12 +206,11 @@ public class UpdateUserTests extends TestBase {
                             .then()
                             .spec(unsuccessfulPartialUpdateUserResponseSpec)
                             .extract().as(UnsuccessfulPartialUpdateUserResponseModel.class);
+        });
 
-            String actualFirstName = responseUpdateUser.firstName().get(0);
-            String actualLastName = responseUpdateUser.lastName().get(0);
-
-            assertThat(actualFirstName).isEqualTo(EXPECTED_REQUIRED_FIELD);
-            assertThat(actualLastName).isEqualTo(EXPECTED_REQUIRED_FIELD);
+            step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(responseUpdateUser.firstName().get(0)).isEqualTo(EXPECTED_REQUIRED_FIELD);
+            assertThat(responseUpdateUser.lastName().get(0)).isEqualTo(EXPECTED_REQUIRED_FIELD);
             assertThat(responseUpdateUser.username()).isNull();
             assertThat(responseUpdateUser.email()).isNull();
         });
@@ -230,20 +219,20 @@ public class UpdateUserTests extends TestBase {
     @Test
     public void withoutRequiredAuthorizationHeaderUpdateUserNegativeTest() {
 
-        step("Ошибка при обновлении пользователя без Authorization header", () -> {
+        UnauthorizedResponseModel responseUpdateUser = step("Ошибка при обновлении пользователя без Authorization header", () -> {
             UpdateUserBodyModel dataUpdateUser = new UpdateUserBodyModel(td.username, td.firstName,
                     td.lastName, td.email);
-            UnauthorizedResponseModel responseUpdateUser =
-                    given(updateUserRequestSpec)
+                    return given(updateUserRequestSpec)
                             .body(dataUpdateUser)
                             .when()
                             .put("/users/me/")
                             .then()
                             .spec(unauthorizedResponseSpec)
                             .extract().as(UnauthorizedResponseModel.class);
+        });
 
-            String actualDetail = responseUpdateUser.detail();
-            assertThat(actualDetail).isEqualTo(EXPECTED_UNAUTHORIZED_ERROR);
+        step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(responseUpdateUser.detail()).isEqualTo(EXPECTED_UNAUTHORIZED_ERROR);
         });
     }
 }

@@ -25,9 +25,9 @@ public class RegistrationTests extends TestBase {
     @Test
     public void successfulRegistrationTest() {
 
-        step("Успешная регистрация пользователя", () -> {
+        SuccessfulRegistrationResponseModel registrationResponse = step("Успешная регистрация пользователя", () -> {
             RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
-            SuccessfulRegistrationResponseModel registrationResponse = given(registrationRequestSpec)
+            return given(registrationRequestSpec)
                     .body(registrationData)
                     .when()
                     .post("/users/register/")
@@ -35,13 +35,14 @@ public class RegistrationTests extends TestBase {
                     .spec(successfulRegistrationResponseSpec)
                     .extract()
                     .as(SuccessfulRegistrationResponseModel.class);
+        });
 
+        step("Проверка соответствия обновленных данных ожидаемым", () -> {
             assertThat(registrationResponse.id()).isGreaterThan(0);
             assertThat(registrationResponse.username()).isEqualTo(username);
             assertThat(registrationResponse.firstName()).isEqualTo("");
             assertThat(registrationResponse.lastName()).isEqualTo("");
             assertThat(registrationResponse.email()).isEqualTo("");
-
             assertThat(registrationResponse.remoteAddr()).matches(REGISTRATION_IP_REGEXP);
         });
     }
@@ -51,42 +52,44 @@ public class RegistrationTests extends TestBase {
 
         RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
 
-        step("Регистрация пользователя и получение username в ответе", () -> {
-            SuccessfulRegistrationResponseModel firstRegistrationResponse = given(registrationRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(successfulRegistrationResponseSpec)
-                    .extract()
-                    .as(SuccessfulRegistrationResponseModel.class);
+        SuccessfulRegistrationResponseModel firstRegistrationResponse =
+                step("Регистрация пользователя и получение username в ответе", () ->
+                        given(registrationRequestSpec)
+                                .body(registrationData)
+                                .when()
+                                .post("/users/register/")
+                                .then()
+                                .spec(successfulRegistrationResponseSpec)
+                                .extract()
+                                .as(SuccessfulRegistrationResponseModel.class));
 
+        step("Проверка получения username в ответе", () -> {
             assertThat(firstRegistrationResponse.username()).isEqualTo(username);
         });
 
-        step("Ошибка при повторной регистрации существующего пользователя", () -> {
-            ExistingUserResponseModel secondRegistrationResponse = given(registrationRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(existingUserRegistrationResponseSpec)
-                    .extract()
-                    .as(ExistingUserResponseModel.class);
+        ExistingUserResponseModel secondRegistrationResponse =
+                step("Ошибка при повторной регистрации существующего пользователя", () ->
+                        given(registrationRequestSpec)
+                                .body(registrationData)
+                                .when()
+                                .post("/users/register/")
+                                .then()
+                                .spec(existingUserRegistrationResponseSpec)
+                                .extract()
+                                .as(ExistingUserResponseModel.class));
 
-            String expectedError = REGISTRATION_EXISTING_USER_ERROR;
-            String actualError = secondRegistrationResponse.username().get(0);
-            assertThat(actualError).isEqualTo(expectedError);
+        step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(secondRegistrationResponse.username().get(0)).isEqualTo(REGISTRATION_EXISTING_USER_ERROR);
         });
     }
 
     @Test
     public void unsupportedMediaTypeRegistrationNegativeTest() {
 
-        step("Ошибка при регистрации с неподдерживаемым Content-Type", () -> {
-            RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
-            UnsupportedMediaTypeRegistrationBodyModel unsupportedMediaTypeResponseModel =
-                    given(unsupportedMediaTypeRegistrationRequestSpec)
+        UnsupportedMediaTypeRegistrationBodyModel unsupportedMediaTypeResponseModel =
+                step("Ошибка при регистрации с неподдерживаемым Content-Type", () -> {
+                    RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
+                    return given(unsupportedMediaTypeRegistrationRequestSpec)
                             .body(registrationData)
                             .when()
                             .post("/users/register/")
@@ -94,18 +97,19 @@ public class RegistrationTests extends TestBase {
                             .spec(unsupportedMediaTypeRegistrationResponseSpec)
                             .extract()
                             .as(UnsupportedMediaTypeRegistrationBodyModel.class);
+                });
 
-            String actualError = unsupportedMediaTypeResponseModel.detail();
-            assertThat(actualError).isEqualTo(EXPECTED_ERROR_UNSUPPORTED_MEDIA_TYPE);
+        step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(unsupportedMediaTypeResponseModel.detail()).isEqualTo(EXPECTED_ERROR_UNSUPPORTED_MEDIA_TYPE);
         });
     }
 
     @Test
     public void emptyPasswordRegistrationNegativeTest() {
 
-        step("Ошибка при регистрации с пустым password", () -> {
+        WrongPasswordResponseModel wrongPasswordResponseModel = step("Ошибка при регистрации с пустым password", () -> {
             RegistrationBodyModel registrationData = new RegistrationBodyModel(username, "");
-            WrongPasswordResponseModel wrongPasswordResponseModel = given(registrationRequestSpec)
+            return given(registrationRequestSpec)
                     .body(registrationData)
                     .when()
                     .post("/users/register/")
@@ -113,37 +117,40 @@ public class RegistrationTests extends TestBase {
                     .spec(wrongPasswordResponseSpecification)
                     .extract()
                     .as(WrongPasswordResponseModel.class);
+        });
 
-            String actualError = wrongPasswordResponseModel.password().get(0);
-            assertThat(actualError).isEqualTo(EXPECTED_ERROR_NOT_BE_BLANK);
+        step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(wrongPasswordResponseModel.password().get(0)).isEqualTo(EXPECTED_ERROR_NOT_BE_BLANK);
         });
     }
 
     @Test
     public void passwordLongerRequiredLengthRegistrationNegativeTest() {
 
-        step("Ошибка при регистрации со слишком длинным password", () -> {
-            RegistrationBodyModel registrationData = new RegistrationBodyModel(username, tooLongPassword);
-            WrongPasswordResponseModel wrongPasswordResponseModel = given(registrationRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(wrongPasswordResponseSpecification)
-                    .extract()
-                    .as(WrongPasswordResponseModel.class);
+        WrongPasswordResponseModel wrongPasswordResponseModel =
+                step("Ошибка при регистрации со слишком длинным password", () -> {
+                    RegistrationBodyModel registrationData = new RegistrationBodyModel(username, tooLongPassword);
+                    return given(registrationRequestSpec)
+                            .body(registrationData)
+                            .when()
+                            .post("/users/register/")
+                            .then()
+                            .spec(wrongPasswordResponseSpecification)
+                            .extract()
+                            .as(WrongPasswordResponseModel.class);
+                });
 
-            String actualError = wrongPasswordResponseModel.password().get(0);
-            assertThat(actualError).isEqualTo(EXPECTED_ERROR_LONGER_REQUIRED_LENGTH_PASSWORD);
+        step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(wrongPasswordResponseModel.password().get(0)).isEqualTo(EXPECTED_ERROR_LONGER_REQUIRED_LENGTH_PASSWORD);
         });
     }
 
     @Test
     public void emptyUsernameRegistrationNegativeTest() {
 
-        step("Ошибка при регистрации с пустым username", () -> {
+        EmptyFieldUsernameResponseModel emptyFieldUsernameResponseModel = step("Ошибка при регистрации с пустым username", () -> {
             RegistrationBodyModel registrationData = new RegistrationBodyModel("", password);
-            EmptyFieldUsernameResponseModel emptyFieldUsernameResponseModel = given(registrationRequestSpec)
+            return given(registrationRequestSpec)
                     .body(registrationData)
                     .when()
                     .post("/users/register/")
@@ -151,9 +158,10 @@ public class RegistrationTests extends TestBase {
                     .spec(wrongUsernameResponseSpecification)
                     .extract()
                     .as(EmptyFieldUsernameResponseModel.class);
+        });
 
-            String actualError = emptyFieldUsernameResponseModel.username().get(0);
-            assertThat(actualError).isEqualTo(EXPECTED_ERROR_NOT_BE_BLANK);
+        step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(emptyFieldUsernameResponseModel.username().get(0)).isEqualTo(EXPECTED_ERROR_NOT_BE_BLANK);
         });
     }
 

@@ -31,80 +31,81 @@ public class LoginTests extends TestBase {
                     .spec(successfulRegistrationResponseSpec);
         });
 
-        step("Авторизация и получение access и refresh token", () -> {
+        SuccessfulLoginResponseModel loginResponse = step("Авторизация и получение access и refresh token", () -> {
             LoginBodyModel data = new LoginBodyModel(td.username, td.password);
-            SuccessfulLoginResponseModel loginResponse = given(loginRequestSpec)
+            return given(loginRequestSpec)
                     .body(data)
                     .when()
                     .post("/auth/token/")
                     .then()
                     .spec(successfulLoginResponseSpec)
                     .extract().as(SuccessfulLoginResponseModel.class);
+        });
 
             String expectedTokenPart = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
-            String actualAccess = loginResponse.access();
-            String actualRefresh = loginResponse.refresh();
 
-            assertThat(actualAccess).startsWith(expectedTokenPart);
-            assertThat(actualRefresh).startsWith(expectedTokenPart);
-            assertThat(actualAccess).isNotEqualTo(actualRefresh);
+        step("Проверка соответствия полученных данных ожидаемым", () -> {
+            assertThat(loginResponse.access()).startsWith(expectedTokenPart);
+            assertThat(loginResponse.refresh()).startsWith(expectedTokenPart);
+            assertThat(loginResponse.access()).isNotEqualTo(loginResponse.refresh());
         });
     }
 
     @Test
     public void invalidCredentialsLoginTest() {
 
-        step("Ошибка при авторизации с неверным password", () -> {
+        InvalidCredentialsLoginResponseModel loginResponse = step("Ошибка при авторизации с неверным password", () -> {
             LoginBodyModel data = new LoginBodyModel(td.username, td.wrongPassword);
-            InvalidCredentialsLoginResponseModel loginResponse = given(loginRequestSpec)
+            return given(loginRequestSpec)
                     .body(data)
                     .when()
                     .post("/auth/token/")
                     .then()
                     .spec(invalidCredentialsLoginResponseSpec)
                     .extract().as(InvalidCredentialsLoginResponseModel.class);
+        });
 
-            String actualErrorInvalidUsernameOrPassword = loginResponse.detail();
-            assertThat(actualErrorInvalidUsernameOrPassword).isEqualTo(EXPECTED_ERROR_INVALID_USERNAME_OR_PASSWORD);
+        step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(loginResponse.detail()).isEqualTo(EXPECTED_ERROR_INVALID_USERNAME_OR_PASSWORD);
         });
     }
 
     @Test
     public void emptyRefreshTokenLoginNegativeTest() {
 
-        step("Ошибка при обновлении токена без refresh token", () -> {
+        WithoutRefreshTokenLoginResponseModel emptyRefreshResponseModel = step("Ошибка при обновлении токена без refresh token", () -> {
             WithoutRefreshTokenLoginBodyModel emptyRefreshToken = new WithoutRefreshTokenLoginBodyModel();
-            WithoutRefreshTokenLoginResponseModel emptyRefreshResponseModel = given(loginRequestSpec)
+            return given(loginRequestSpec)
                     .body(emptyRefreshToken)
                     .when()
                     .post("/auth/token/refresh/")
                     .then()
                     .spec(withoutRefreshTokenResponseSpec)
                     .extract().as(WithoutRefreshTokenLoginResponseModel.class);
+        });
 
-            String actualRefresh = emptyRefreshResponseModel.refresh().get(0);
-            assertThat(actualRefresh).isEqualTo(EXPECTED_REQUIRED_FIELD);
+        step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(emptyRefreshResponseModel.refresh().get(0)).isEqualTo(EXPECTED_REQUIRED_FIELD);
         });
     }
 
     @Test
     public void invalidRefreshTokenLoginNegativeTest() {
 
-        step("Ошибка при обновлении токена с невалидным refresh token", () -> {
+        InvalidRefreshTokenResponseModel loginResponse = step("Ошибка при обновлении токена с невалидным refresh token", () -> {
             InvalidRefreshTokenBodyModel invalidTokenBodyModel = new InvalidRefreshTokenBodyModel(td.EXPECTED_ERROR_INVALID_REFRESH_TOKEN);
-            InvalidRefreshTokenResponseModel loginResponse = given(loginRequestSpec)
+             return given(loginRequestSpec)
                     .body(invalidTokenBodyModel)
                     .when()
                     .post("/auth/token/refresh/")
                     .then()
                     .spec(invalidRefreshTokenResponseSpec)
                     .extract().as(InvalidRefreshTokenResponseModel.class);
+        });
 
-            String actualDetailInvalidRefreshToken = loginResponse.detail();
-            String actualCodeInvalidRefreshToken = loginResponse.code();
-
-            assertThat(actualDetailInvalidRefreshToken).isEqualTo(EXPECTED_ERROR_VALID_TOKEN);
-            assertThat(actualCodeInvalidRefreshToken).isEqualTo(EXPECTED_TOKEN_NOT_VALID_CODE);
+            step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(loginResponse.detail()).isEqualTo(EXPECTED_ERROR_VALID_TOKEN);
+            assertThat(loginResponse.code()).isEqualTo(EXPECTED_TOKEN_NOT_VALID_CODE);
         });
     }
 
@@ -134,21 +135,20 @@ public class LoginTests extends TestBase {
                     .extract().path("access");
         });
 
-        step("Ошибка при обновлении токена с access token вместо refresh token", () -> {
+        InvalidRefreshTokenResponseModel loginResponse = step("Ошибка при обновлении токена с access token вместо refresh token", () -> {
             InvalidRefreshTokenBodyModel invalidTokenBodyModel = new InvalidRefreshTokenBodyModel(accessToken);
-            InvalidRefreshTokenResponseModel loginResponse = given(loginRequestSpec)
+            return given(loginRequestSpec)
                     .body(invalidTokenBodyModel)
                     .when()
                     .post("/auth/token/refresh/")
                     .then()
                     .spec(invalidRefreshTokenResponseSpec)
                     .extract().as(InvalidRefreshTokenResponseModel.class);
+        });
 
-            String actualDetailInvalidRefreshToken = loginResponse.detail();
-            String actualCodeInvalidRefreshToken = loginResponse.code();
-
-            assertThat(actualDetailInvalidRefreshToken).isEqualTo(EXPECTED_ERROR_WRONG_TOKEN_TYPE);
-            assertThat(actualCodeInvalidRefreshToken).isEqualTo(EXPECTED_TOKEN_NOT_VALID_CODE);
+            step("Проверка соответствия полученной ошибки ожидаемой", () -> {
+            assertThat(loginResponse.detail()).isEqualTo(EXPECTED_ERROR_WRONG_TOKEN_TYPE);
+            assertThat(loginResponse.code()).isEqualTo(EXPECTED_TOKEN_NOT_VALID_CODE);
         });
     }
 
