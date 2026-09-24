@@ -25,22 +25,11 @@ public class RegistrationTests extends TestBase {
     @Test
     public void successfulRegistrationTest() {
 
-//        SuccessfulRegistrationResponseModel registrationResponse = step("Успешная регистрация пользователя", () -> {
-//            RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
-//            return given(registrationRequestSpec)
-//                    .body(registrationData)
-//                    .when()
-//                    .post("/users/register/")
-//                    .then()
-//                    .spec(successfulRegistrationResponseSpec)
-//                    .extract()
-//                    .as(SuccessfulRegistrationResponseModel.class);
-//        });
-
-        SuccessfulRegistrationResponseModel registrationResponse = step("Успешная регистрация пользователя", () -> {
-            RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
-            return api.registration().registerUser(registrationData);
-        });
+        SuccessfulRegistrationResponseModel registrationResponse =
+                step("Успешная регистрация пользователя", () -> {
+                    RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
+                    return api.registration().registerUser(registrationData);
+                });
 
         step("Проверка соответствия обновленных данных ожидаемым", () -> {
             assertThat(registrationResponse.id()).isGreaterThan(0);
@@ -53,39 +42,25 @@ public class RegistrationTests extends TestBase {
     }
 
     @Test
-    public void existingUserWrongRegistrationTest() {
+    public void existingUserRegistrationNegativeTest() {
 
         RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
 
-        SuccessfulRegistrationResponseModel firstRegistrationResponse =
-                step("Регистрация пользователя и получение username в ответе", () ->
-                        given(registrationRequestSpec)
-                                .body(registrationData)
-                                .when()
-                                .post("/users/register/")
-                                .then()
-                                .spec(successfulRegistrationResponseSpec)
-                                .extract()
-                                .as(SuccessfulRegistrationResponseModel.class));
+        SuccessfulRegistrationResponseModel registrationResponse =
+                step("Успешная регистрация пользователя", () ->
+                        api.registration().registerUser(registrationData));
 
-        step("Проверка получения username в ответе", () -> {
-            assertThat(firstRegistrationResponse.username()).isEqualTo(username);
-        });
+        step("Проверка получения username в ответе", () ->
+                assertThat(registrationResponse.username()).isEqualTo(username));
+
 
         ExistingUserResponseModel secondRegistrationResponse =
                 step("Ошибка при повторной регистрации существующего пользователя", () ->
-                        given(registrationRequestSpec)
-                                .body(registrationData)
-                                .when()
-                                .post("/users/register/")
-                                .then()
-                                .spec(existingUserRegistrationResponseSpec)
-                                .extract()
-                                .as(ExistingUserResponseModel.class));
+                        api.registration().registerExistingUser(registrationData));
 
-        step("Проверка соответствия полученной ошибки ожидаемой", () -> {
-            assertThat(secondRegistrationResponse.username().get(0)).isEqualTo(REGISTRATION_EXISTING_USER_ERROR);
-        });
+        step("Проверка соответствия полученной ошибки ожидаемой", () ->
+                assertThat(secondRegistrationResponse.username().get(0)).isEqualTo(REGISTRATION_EXISTING_USER_ERROR));
+
     }
 
     @Test
@@ -94,14 +69,7 @@ public class RegistrationTests extends TestBase {
         UnsupportedMediaTypeRegistrationBodyModel unsupportedMediaTypeResponseModel =
                 step("Ошибка при регистрации с неподдерживаемым Content-Type", () -> {
                     RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
-                    return given(unsupportedMediaTypeRegistrationRequestSpec)
-                            .body(registrationData)
-                            .when()
-                            .post("/users/register/")
-                            .then()
-                            .spec(unsupportedMediaTypeRegistrationResponseSpec)
-                            .extract()
-                            .as(UnsupportedMediaTypeRegistrationBodyModel.class);
+                    return api.registration().registerUserWithUnsupportedMediaType(registrationData);
                 });
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
@@ -114,14 +82,7 @@ public class RegistrationTests extends TestBase {
 
         WrongPasswordResponseModel wrongPasswordResponseModel = step("Ошибка при регистрации с пустым password", () -> {
             RegistrationBodyModel registrationData = new RegistrationBodyModel(username, "");
-            return given(registrationRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(wrongPasswordResponseSpecification)
-                    .extract()
-                    .as(WrongPasswordResponseModel.class);
+            return api.registration().registerUserWithEmptyPassword(registrationData);
         });
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
@@ -135,14 +96,7 @@ public class RegistrationTests extends TestBase {
         WrongPasswordResponseModel wrongPasswordResponseModel =
                 step("Ошибка при регистрации со слишком длинным password", () -> {
                     RegistrationBodyModel registrationData = new RegistrationBodyModel(username, tooLongPassword);
-                    return given(registrationRequestSpec)
-                            .body(registrationData)
-                            .when()
-                            .post("/users/register/")
-                            .then()
-                            .spec(wrongPasswordResponseSpecification)
-                            .extract()
-                            .as(WrongPasswordResponseModel.class);
+                    return api.registration().registerUserWithTooLongPassword(registrationData);
                 });
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
@@ -153,17 +107,13 @@ public class RegistrationTests extends TestBase {
     @Test
     public void emptyUsernameRegistrationNegativeTest() {
 
-        EmptyFieldUsernameResponseModel emptyFieldUsernameResponseModel = step("Ошибка при регистрации с пустым username", () -> {
-            RegistrationBodyModel registrationData = new RegistrationBodyModel("", password);
-            return given(registrationRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(wrongUsernameResponseSpecification)
-                    .extract()
-                    .as(EmptyFieldUsernameResponseModel.class);
-        });
+
+        EmptyFieldUsernameResponseModel emptyFieldUsernameResponseModel =
+                step("Ошибка при регистрации с пустым username", () -> {
+                    RegistrationBodyModel registrationData = new RegistrationBodyModel("", password);
+
+                    return api.registration().registerUserWithEmptyUsername(registrationData);
+                });
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
             assertThat(emptyFieldUsernameResponseModel.username().get(0)).isEqualTo(EXPECTED_ERROR_NOT_BE_BLANK);
