@@ -25,16 +25,21 @@ public class RegistrationTests extends TestBase {
     @Test
     public void successfulRegistrationTest() {
 
+//        SuccessfulRegistrationResponseModel registrationResponse = step("Успешная регистрация пользователя", () -> {
+//            RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
+//            return given(registrationRequestSpec)
+//                    .body(registrationData)
+//                    .when()
+//                    .post("/users/register/")
+//                    .then()
+//                    .spec(successfulRegistrationResponseSpec)
+//                    .extract()
+//                    .as(SuccessfulRegistrationResponseModel.class);
+//        });
+
         SuccessfulRegistrationResponseModel registrationResponse = step("Успешная регистрация пользователя", () -> {
             RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
-            return given(registrationRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(successfulRegistrationResponseSpec)
-                    .extract()
-                    .as(SuccessfulRegistrationResponseModel.class);
+            return api.registration().registerUser(registrationData);
         });
 
         step("Проверка соответствия обновленных данных ожидаемым", () -> {
