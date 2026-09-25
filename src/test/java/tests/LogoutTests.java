@@ -1,6 +1,7 @@
 package tests;
 
 import models.login.LoginBodyModel;
+import models.login.SuccessfulLoginResponseModel;
 import models.logout.LogoutBodyModel;
 import models.logout.WithoutRefreshTokenLogoutBodyModel;
 import models.logout.WithoutRefreshTokenLogoutResponseModel;
@@ -10,13 +11,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static io.qameta.allure.Allure.step;
-import static io.restassured.RestAssured.given;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static specs.login.LoginSpec.loginRequestSpec;
-import static specs.login.LoginSpec.successfulLoginResponseSpec;
-import static specs.logout.LogoutSpec.*;
-import static specs.registration.RegistrationSpec.registrationRequestSpec;
-import static specs.registration.RegistrationSpec.successfulRegistrationResponseSpec;
 import static tests.TestData.*;
 
 
@@ -33,83 +28,47 @@ public class LogoutTests extends TestBase {
 
     @Test
     public void successfulLogoutTest() {
+        RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
 
         step("Регистрация пользователя", () -> {
-            RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
-            given(registrationRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(successfulRegistrationResponseSpec);
+            api.registration().registerUser(registrationData);
         });
 
         String refreshToken = step("Авторизация и получение токена", () -> {
-            LoginBodyModel data = new LoginBodyModel(td.username, td.password);
-            return given(loginRequestSpec)
-                    .body(data)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("refresh");
+            LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
+
+            SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
+            return loginResponse.refresh();
         });
 
         step("Выход пользователя из системы с refresh token", () -> {
             LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
-            given(logoutRequestSpec)
-                    .body(logoutData)
-                    .when()
-                    .post("/auth/logout/")
-                    .then()
-                    .spec(successfulLogoutResponseSpec);
+            api.logout().logoutWithRefreshToken(logoutData);
         });
     }
 
     @Test
     public void logoutWithReusedRefreshTokenShouldReturn401Test() {
+        RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
 
-        step("Регистрация пользователя", () -> {
-            RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
-            given(registrationRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(successfulRegistrationResponseSpec);
-        });
+        step("Регистрация пользователя", () ->
+            api.registration().registerUser(registrationData));
 
         String refreshToken = step("Авторизация и получение токена", () -> {
-            LoginBodyModel data = new LoginBodyModel(td.username, td.password);
-            return given(loginRequestSpec)
-                    .body(data)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("refresh");
+            LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
+            SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
+            return loginResponse.refresh();
         });
 
         step("Выход пользователя из системы с refresh token", () -> {
-            LogoutBodyModel logoutFirstData = new LogoutBodyModel(refreshToken);
-            given(logoutRequestSpec)
-                    .body(logoutFirstData)
-                    .when()
-                    .post("/auth/logout/")
-                    .then()
-                    .spec(successfulLogoutResponseSpec);
+            LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
+            api.logout().logoutWithRefreshToken(logoutData);
         });
 
         WrongReusedRefreshTokenResponseModel logoutResponse =
-                step("Ошибка при повторном выходе пользователя из системы с тем же refresh token", () -> {
-            LogoutBodyModel logoutSecondData = new LogoutBodyModel(refreshToken);
-                    return given(logoutRequestSpec)
-                            .body(logoutSecondData)
-                            .when()
-                            .post("/auth/logout/")
-                            .then()
-                            .spec(invalidTokenLogoutResponseSpec)
-                            .extract().as(WrongReusedRefreshTokenResponseModel.class);
+                step("Повторно выполнить logout с тем же refresh token", () -> {
+            LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
+            return api.logout().logoutAgainWithSameRefreshToken(logoutData);
         });
 
             step("Проверка соответствия полученной ошибки ожидаемой", () -> {
@@ -124,13 +83,7 @@ public class LogoutTests extends TestBase {
         WithoutRefreshTokenLogoutResponseModel logoutResponse =
                 step("Выход пользователя из системы без refresh token", () -> {
             WithoutRefreshTokenLogoutBodyModel logoutData = new WithoutRefreshTokenLogoutBodyModel();
-            return given(logoutRequestSpec)
-                    .body(logoutData)
-                    .when()
-                    .post("/auth/logout/")
-                    .then()
-                    .spec(withoutRefreshTokenLogoutResponseSpec)
-                    .extract().as(WithoutRefreshTokenLogoutResponseModel.class);
+            return api.logout().logoutWithoutRefreshToken(logoutData);
         });
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
@@ -143,35 +96,19 @@ public class LogoutTests extends TestBase {
 
         step("Регистрация пользователя", () -> {
             RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
-            given(registrationRequestSpec)
-                    .body(registrationData)
-                    .when()
-                    .post("/users/register/")
-                    .then()
-                    .spec(successfulRegistrationResponseSpec);
+            api.registration().registerUser(registrationData);
         });
 
         String accessToken = step("Авторизация и получение токена", () -> {
-            LoginBodyModel data = new LoginBodyModel(td.username, td.password);
-            return given(loginRequestSpec)
-                    .body(data)
-                    .when()
-                    .post("/auth/token/")
-                    .then()
-                    .spec(successfulLoginResponseSpec)
-                    .extract().path("access");
+            LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
+            SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
+            return loginResponse.access();
         });
 
         WrongReusedRefreshTokenResponseModel logoutResponse =
                 step("Ошибка при выходе пользователя из системы с access token вместо refresh token", () -> {
             LogoutBodyModel logoutData = new LogoutBodyModel(accessToken);
-            return given(logoutRequestSpec)
-                            .body(logoutData)
-                            .when()
-                            .post("/auth/logout/")
-                            .then()
-                            .spec(invalidTokenLogoutResponseSpec)
-                            .extract().as(WrongReusedRefreshTokenResponseModel.class);
+            return api.logout().logoutWithAccessTokenInsteadOfRefreshToken(logoutData);
         });
 
             step("Проверка соответствия полученной ошибки ожидаемой", () -> {
