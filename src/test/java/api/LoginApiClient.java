@@ -1,5 +1,6 @@
 package api;
 
+import io.qameta.allure.Step;
 import models.login.*;
 
 import static io.restassured.RestAssured.given;
@@ -7,6 +8,7 @@ import static specs.login.LoginSpec.*;
 
 public class LoginApiClient {
 
+    @Step("Авторизация и получение access и refresh token")
     public SuccessfulLoginResponseModel loginUser(LoginBodyModel loginData) {
         return given(loginRequestSpec)
                 .body(loginData)
@@ -17,6 +19,7 @@ public class LoginApiClient {
                 .extract().as(SuccessfulLoginResponseModel.class);
     }
 
+    @Step("Ошибка при авторизации с неверным password")
     public InvalidCredentialsLoginResponseModel loginUserWithWrongPassword(LoginBodyModel loginData) {
         return given(loginRequestSpec)
                 .body(loginData)
@@ -27,6 +30,7 @@ public class LoginApiClient {
                 .extract().as(InvalidCredentialsLoginResponseModel.class);
     }
 
+    @Step("Ошибка при обновлении токена без refresh token")
     public WithoutRefreshTokenLoginResponseModel updateTokenWithoutRefreshToken(WithoutRefreshTokenLoginBodyModel emptyRefreshToken) {
         return given(loginRequestSpec)
                 .body(emptyRefreshToken)
@@ -37,6 +41,7 @@ public class LoginApiClient {
                 .extract().as(WithoutRefreshTokenLoginResponseModel.class);
     }
 
+    @Step("Ошибка при обновлении токена с невалидным refresh token")
     public InvalidRefreshTokenResponseModel refreshAccessTokenWithInvalidRefreshToken(InvalidRefreshTokenBodyModel invalidTokenBodyModel) {
         return given(loginRequestSpec)
                 .body(invalidTokenBodyModel)
@@ -47,6 +52,7 @@ public class LoginApiClient {
                 .extract().as(InvalidRefreshTokenResponseModel.class);
     }
 
+    @Step("Ошибка при обновлении токена с access token вместо refresh token")
     public InvalidRefreshTokenResponseModel refreshAccessTokenWithAccessTokenInsteadOfRefreshToken(InvalidRefreshTokenBodyModel invalidTokenBodyModel) {
         return given(loginRequestSpec)
                 .body(invalidTokenBodyModel)

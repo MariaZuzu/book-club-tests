@@ -8,6 +8,7 @@ import models.logout.WithoutRefreshTokenLogoutResponseModel;
 import models.logout.WrongReusedRefreshTokenResponseModel;
 import models.registration.RegistrationBodyModel;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.qameta.allure.Allure.step;
@@ -27,12 +28,11 @@ public class LogoutTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Выход пользователя из системы с refresh token")
     public void successfulLogoutTest() {
-        RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
 
-        step("Регистрация пользователя", () -> {
-            api.registration().registerUser(registrationData);
-        });
+        RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
+        api.registration().registerUser(registrationData);
 
         String refreshToken = step("Авторизация и получение токена", () -> {
             LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
@@ -41,18 +41,15 @@ public class LogoutTests extends TestBase {
             return loginResponse.refresh();
         });
 
-        step("Выход пользователя из системы с refresh token", () -> {
-            LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
-            api.logout().logoutWithRefreshToken(logoutData);
-        });
+        LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
+        api.logout().logoutWithRefreshToken(logoutData);
     }
 
     @Test
+    @DisplayName("Выход пользователя из системы повторно с тем же refresh token")
     public void logoutWithReusedRefreshTokenShouldReturn401Test() {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
-
-        step("Регистрация пользователя", () ->
-                api.registration().registerUser(registrationData));
+        api.registration().registerUser(registrationData);
 
         String refreshToken = step("Авторизация и получение токена", () -> {
             LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
@@ -60,16 +57,11 @@ public class LogoutTests extends TestBase {
             return loginResponse.refresh();
         });
 
-        step("Выход пользователя из системы с refresh token", () -> {
-            LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
-            api.logout().logoutWithRefreshToken(logoutData);
-        });
+        LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
+        api.logout().logoutWithRefreshToken(logoutData);
 
-        WrongReusedRefreshTokenResponseModel logoutResponse =
-                step("Повторно выполнить logout с тем же refresh token", () -> {
-                    LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
-                    return api.logout().logoutAgainWithSameRefreshToken(logoutData);
-                });
+        LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
+        WrongReusedRefreshTokenResponseModel logoutResponse = api.logout().logoutAgainWithSameRefreshToken(logoutData);
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
             assertThat(logoutResponse.detail()).isEqualTo(EXPECTED_ERROR_TOKEN_IS_BLACKLISTED);
@@ -78,13 +70,11 @@ public class LogoutTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Выход пользователя из системы без refresh token")
     public void logoutWithoutRefreshTokenNegativeTest() {
 
-        WithoutRefreshTokenLogoutResponseModel logoutResponse =
-                step("Выход пользователя из системы без refresh token", () -> {
-                    WithoutRefreshTokenLogoutBodyModel logoutData = new WithoutRefreshTokenLogoutBodyModel();
-                    return api.logout().logoutWithoutRefreshToken(logoutData);
-                });
+        WithoutRefreshTokenLogoutBodyModel logoutData = new WithoutRefreshTokenLogoutBodyModel();
+        WithoutRefreshTokenLogoutResponseModel logoutResponse = api.logout().logoutWithoutRefreshToken(logoutData);
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
             assertThat(logoutResponse.refresh().get(0)).isEqualTo(EXPECTED_REQUIRED_FIELD);
@@ -92,12 +82,11 @@ public class LogoutTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Ошибка при выходе пользователя из системы с access token вместо refresh token")
     public void accessTokenInsteadOfRefreshTokenNegativeTest() {
 
-        step("Регистрация пользователя", () -> {
-            RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
-            api.registration().registerUser(registrationData);
-        });
+        RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
+        api.registration().registerUser(registrationData);
 
         String accessToken = step("Авторизация и получение токена", () -> {
             LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);

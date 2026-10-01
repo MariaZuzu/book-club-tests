@@ -3,6 +3,7 @@ package tests;
 import models.login.*;
 import models.registration.RegistrationBodyModel;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.qameta.allure.Allure.step;
@@ -22,19 +23,15 @@ public class LoginTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Авторизация и получение access и refresh token")
     public void successfulLoginTest() {
 
-        step("Регистрация пользователя", () -> {
-            RegistrationBodyModel registrationData =
-                    new RegistrationBodyModel(username, password);
-            api.registration().registerUser(registrationData);
-        });
+        RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
+        api.registration().registerUser(registrationData);
 
-        SuccessfulLoginResponseModel loginResponse =
-                step("Авторизация и получение access и refresh token", () -> {
-                    LoginBodyModel loginData = new LoginBodyModel(username, password);
-                    return api.login().loginUser(loginData);
-                });
+        LoginBodyModel loginData = new LoginBodyModel(username, password);
+        SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
+
         String expectedTokenPart = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
 
         step("Проверка соответствия полученных данных ожидаемым", () -> {
@@ -45,13 +42,11 @@ public class LoginTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Ошибка при авторизации с неверным password")
     public void invalidCredentialsLoginTest() {
 
-        InvalidCredentialsLoginResponseModel loginResponse =
-                step("Ошибка при авторизации с неверным password", () -> {
-                    LoginBodyModel loginData = new LoginBodyModel(username, wrongPassword);
-                    return api.login().loginUserWithWrongPassword(loginData);
-                });
+        LoginBodyModel loginData = new LoginBodyModel(username, wrongPassword);
+        InvalidCredentialsLoginResponseModel loginResponse = api.login().loginUserWithWrongPassword(loginData);
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
             assertThat(loginResponse.detail()).isEqualTo(EXPECTED_ERROR_INVALID_USERNAME_OR_PASSWORD);
@@ -59,13 +54,11 @@ public class LoginTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Ошибка при обновлении токена без refresh token")
     public void emptyRefreshTokenLoginNegativeTest() {
 
-        WithoutRefreshTokenLoginResponseModel emptyRefreshResponseModel =
-                step("Ошибка при обновлении токена без refresh token", () -> {
-                    WithoutRefreshTokenLoginBodyModel emptyRefreshToken = new WithoutRefreshTokenLoginBodyModel();
-                    return api.login().updateTokenWithoutRefreshToken(emptyRefreshToken);
-                });
+        WithoutRefreshTokenLoginBodyModel emptyRefreshToken = new WithoutRefreshTokenLoginBodyModel();
+        WithoutRefreshTokenLoginResponseModel emptyRefreshResponseModel = api.login().updateTokenWithoutRefreshToken(emptyRefreshToken);
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
             assertThat(emptyRefreshResponseModel.refresh().get(0)).isEqualTo(EXPECTED_REQUIRED_FIELD);
@@ -73,13 +66,11 @@ public class LoginTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Ошибка при обновлении токена с невалидным refresh token")
     public void invalidRefreshTokenLoginNegativeTest() {
 
-        InvalidRefreshTokenResponseModel loginResponse =
-                step("Ошибка при обновлении токена с невалидным refresh token", () -> {
-                    InvalidRefreshTokenBodyModel invalidTokenBodyModel = new InvalidRefreshTokenBodyModel(EXPECTED_ERROR_INVALID_REFRESH_TOKEN);
-                    return api.login().refreshAccessTokenWithInvalidRefreshToken(invalidTokenBodyModel);
-                });
+        InvalidRefreshTokenBodyModel invalidTokenBodyModel = new InvalidRefreshTokenBodyModel(EXPECTED_ERROR_INVALID_REFRESH_TOKEN);
+        InvalidRefreshTokenResponseModel loginResponse = api.login().refreshAccessTokenWithInvalidRefreshToken(invalidTokenBodyModel);
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
             assertThat(loginResponse.detail()).isEqualTo(EXPECTED_ERROR_VALID_TOKEN);
@@ -88,13 +79,11 @@ public class LoginTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Ошибка при обновлении токена с access token вместо refresh token")
     public void accessTokenInsteadRefreshTokenLoginNegativeTest() {
 
-        step("Регистрация пользователя", () -> {
-            RegistrationBodyModel registrationData =
-                    new RegistrationBodyModel(username, password);
-            api.registration().registerUser(registrationData);
-        });
+        RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
+        api.registration().registerUser(registrationData);
 
         String accessToken = step("Авторизация и получение access token", () -> {
             LoginBodyModel loginData = new LoginBodyModel(username, password);
@@ -102,9 +91,7 @@ public class LoginTests extends TestBase {
             return loginResponse.access();
         });
 
-        InvalidRefreshTokenBodyModel invalidTokenBodyModel =
-                step("Ошибка при обновлении токена с access token вместо refresh token", () ->
-                        new InvalidRefreshTokenBodyModel(accessToken));
+        InvalidRefreshTokenBodyModel invalidTokenBodyModel = new InvalidRefreshTokenBodyModel(accessToken);
 
         InvalidRefreshTokenResponseModel refreshTokenResponse =
                 api.login().refreshAccessTokenWithAccessTokenInsteadOfRefreshToken(invalidTokenBodyModel);

@@ -5,6 +5,7 @@ import models.login.SuccessfulLoginResponseModel;
 import models.registration.RegistrationBodyModel;
 import models.user.*;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.qameta.allure.Allure.step;
@@ -23,12 +24,11 @@ public class UpdateUserTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Полное обновление данных пользователя через PUT")
     public void successfulFullUpdateUserWithPutTest() {
 
-        step("Регистрация пользователя", () -> {
-            RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
-            api.registration().registerUser(registrationData);
-        });
+        RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
+        api.registration().registerUser(registrationData);
 
         String accessToken = step("Авторизация и получение access token", () -> {
             LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
@@ -36,12 +36,9 @@ public class UpdateUserTests extends TestBase {
             return loginResponse.access();
         });
 
-        SuccessfulUpdateUserResponseModel responseUpdateUser =
-                step("Полное обновление данных пользователя через PUT", () -> {
-                    UpdateUserBodyModel updateUserData = new UpdateUserBodyModel(td.username, td.firstName,
-                            td.lastName, td.email);
-                    return api.updateUser().updateUserWithPut(updateUserData, accessToken);
-                });
+        UpdateUserBodyModel updateUserData = new UpdateUserBodyModel(td.username, td.firstName,
+                td.lastName, td.email);
+        SuccessfulUpdateUserResponseModel responseUpdateUser = api.updateUser().updateUserWithPut(updateUserData, accessToken);
 
         step("Проверка соответствия обновленных данных ожидаемым", () -> {
             assertThat(responseUpdateUser.id()).isPositive();
@@ -54,13 +51,11 @@ public class UpdateUserTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Обновление данных пользователя через PATCH")
     public void successfulFullUpdateUserWithPatchTest() {
 
-        step("Регистрация пользователя", () -> {
-            RegistrationBodyModel registrationData =
-                    new RegistrationBodyModel(td.username, td.password);
-            api.registration().registerUser(registrationData);
-        });
+        RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
+        api.registration().registerUser(registrationData);
 
         String accessToken = step("Авторизоваться и получить access token", () -> {
             LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
@@ -68,12 +63,8 @@ public class UpdateUserTests extends TestBase {
             return loginResponse.access();
         });
 
-        SuccessfulUpdateUserResponseModel responseUpdateUser =
-                step("Обновление данных пользователя через PATCH", () -> {
-                    UpdateUserBodyModel updateUserData = new UpdateUserBodyModel(td.username, td.firstName,
-                            td.lastName, td.email);
-                    return api.updateUser().updateUserWithPatch(updateUserData, accessToken);
-                });
+        UpdateUserBodyModel updateUserData = new UpdateUserBodyModel(td.username, td.firstName, td.lastName, td.email);
+        SuccessfulUpdateUserResponseModel responseUpdateUser = api.updateUser().updateUserWithPatch(updateUserData, accessToken);
 
         step("Проверка соответствия обновленных данных ожидаемым", () -> {
             assertThat(responseUpdateUser.id()).isPositive();
@@ -86,13 +77,11 @@ public class UpdateUserTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Частичное обновление данных пользователя через PATCH")
     public void successfulPartialUpdateUserWithPatchTest() {
 
-        step("Регистрация пользователя", () -> {
-            RegistrationBodyModel registrationData =
-                    new RegistrationBodyModel(td.username, td.password);
-            api.registration().registerUser(registrationData);
-        });
+        RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
+        api.registration().registerUser(registrationData);
 
         String accessToken = step("Авторизация и получение access token", () -> {
             LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
@@ -100,12 +89,8 @@ public class UpdateUserTests extends TestBase {
             return loginResponse.access();
         });
 
-        SuccessfulUpdateUserResponseModel responseUpdateUser =
-                step("Частичное обновление данных пользователя через PATCH", () -> {
-                    PartialUpdateUserBodyModel updateUserData =
-                            new PartialUpdateUserBodyModel(td.username, td.email);
-                    return api.updateUser().partiallyUpdateUserWithPatch(updateUserData, accessToken);
-                });
+        PartialUpdateUserBodyModel updateUserData = new PartialUpdateUserBodyModel(td.username, td.email);
+        SuccessfulUpdateUserResponseModel responseUpdateUser = api.updateUser().partiallyUpdateUserWithPatch(updateUserData, accessToken);
 
         step("Проверка соответствия обновленных данных ожидаемым", () -> {
             assertThat(responseUpdateUser.id()).isPositive();
@@ -116,13 +101,11 @@ public class UpdateUserTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Ошибка при частичном обновлении пользователя через PUT")
     public void partialUpdateUserWithPutNegativeTest() {
 
-        step("Регистрация пользователя", () -> {
-            RegistrationBodyModel registrationData =
-                    new RegistrationBodyModel(td.username, td.password);
-            api.registration().registerUser(registrationData);
-        });
+        RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
+        api.registration().registerUser(registrationData);
 
         String accessToken = step("Авторизация и получение access token", () -> {
             LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
@@ -130,11 +113,9 @@ public class UpdateUserTests extends TestBase {
             return responseLogin.access();
         });
 
+        PartialUpdateUserBodyModel updateUserData = new PartialUpdateUserBodyModel(td.username, td.email);
         UnsuccessfulPartialUpdateUserResponseModel responseUpdateUser =
-                step("Ошибка при частичном обновлении пользователя через PUT", () -> {
-                    PartialUpdateUserBodyModel updateUserData = new PartialUpdateUserBodyModel(td.username, td.email);
-                    return api.updateUser().partiallyUpdateUserWithPutExpectingError(updateUserData, accessToken);
-                });
+                api.updateUser().partiallyUpdateUserWithPutExpectingError(updateUserData, accessToken);
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
             assertThat(responseUpdateUser.firstName().get(0)).isEqualTo(EXPECTED_REQUIRED_FIELD);
@@ -145,14 +126,12 @@ public class UpdateUserTests extends TestBase {
     }
 
     @Test
+    @DisplayName("Ошибка при обновлении пользователя без Authorization header")
     public void withoutRequiredAuthorizationHeaderUpdateUserNegativeTest() {
 
-        UnauthorizedResponseModel responseUpdateUser =
-                step("Проверить ошибку при обновлении пользователя без Authorization header", () -> {
-                    UpdateUserBodyModel updateUserData = new UpdateUserBodyModel(td.username, td.firstName,
-                            td.lastName, td.email);
-                    return api.updateUser().updateUserWithoutAuthorizationHeader(updateUserData);
-                });
+        UpdateUserBodyModel updateUserData = new UpdateUserBodyModel(td.username, td.firstName,
+                td.lastName, td.email);
+        UnauthorizedResponseModel responseUpdateUser = api.updateUser().updateUserWithoutAuthorizationHeader(updateUserData);
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
             assertThat(responseUpdateUser.detail()).isEqualTo(EXPECTED_UNAUTHORIZED_ERROR);
