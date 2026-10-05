@@ -85,11 +85,9 @@ public class LoginTests extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
         api.registration().registerUser(registrationData);
 
-        String accessToken = step("Авторизация и получение access token", () -> {
-            LoginBodyModel loginData = new LoginBodyModel(username, password);
-            SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
-            return loginResponse.access();
-        });
+        LoginBodyModel loginData = new LoginBodyModel(username, password);
+        SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
+        String accessToken = loginResponse.access();
 
         InvalidRefreshTokenBodyModel invalidTokenBodyModel = new InvalidRefreshTokenBodyModel(accessToken);
 

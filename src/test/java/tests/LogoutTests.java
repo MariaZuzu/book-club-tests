@@ -34,12 +34,9 @@ public class LogoutTests extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
         api.registration().registerUser(registrationData);
 
-        String refreshToken = step("Авторизация и получение токена", () -> {
-            LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
-
-            SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
-            return loginResponse.refresh();
-        });
+        LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
+        SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
+        String refreshToken = loginResponse.refresh();
 
         LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
         api.logout().logoutWithRefreshToken(logoutData);
@@ -51,16 +48,13 @@ public class LogoutTests extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
         api.registration().registerUser(registrationData);
 
-        String refreshToken = step("Авторизация и получение токена", () -> {
-            LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
-            SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
-            return loginResponse.refresh();
-        });
+        LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
+        SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
+        String refreshToken = loginResponse.refresh();
 
         LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
         api.logout().logoutWithRefreshToken(logoutData);
 
-        LogoutBodyModel logoutData = new LogoutBodyModel(refreshToken);
         WrongReusedRefreshTokenResponseModel logoutResponse = api.logout().logoutAgainWithSameRefreshToken(logoutData);
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
@@ -88,17 +82,12 @@ public class LogoutTests extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
         api.registration().registerUser(registrationData);
 
-        String accessToken = step("Авторизация и получение токена", () -> {
-            LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
-            SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
-            return loginResponse.access();
-        });
+        LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
+        SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
+        String accessToken = loginResponse.access();
 
-        WrongReusedRefreshTokenResponseModel logoutResponse =
-                step("Ошибка при выходе пользователя из системы с access token вместо refresh token", () -> {
-                    LogoutBodyModel logoutData = new LogoutBodyModel(accessToken);
-                    return api.logout().logoutWithAccessTokenInsteadOfRefreshToken(logoutData);
-                });
+        LogoutBodyModel logoutData = new LogoutBodyModel(accessToken);
+        WrongReusedRefreshTokenResponseModel logoutResponse = api.logout().logoutWithAccessTokenInsteadOfRefreshToken(logoutData);
 
         step("Проверка соответствия полученной ошибки ожидаемой", () -> {
             assertThat(logoutResponse.detail()).isEqualTo(EXPECTED_ERROR_WRONG_TOKEN_TYPE);

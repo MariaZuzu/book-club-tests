@@ -30,11 +30,9 @@ public class UpdateUserTests extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
         api.registration().registerUser(registrationData);
 
-        String accessToken = step("Авторизация и получение access token", () -> {
-            LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
-            SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
-            return loginResponse.access();
-        });
+        LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
+        SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
+        String accessToken = loginResponse.access();
 
         UpdateUserBodyModel updateUserData = new UpdateUserBodyModel(td.username, td.firstName,
                 td.lastName, td.email);
@@ -57,11 +55,9 @@ public class UpdateUserTests extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
         api.registration().registerUser(registrationData);
 
-        String accessToken = step("Авторизоваться и получить access token", () -> {
-            LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
-            SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
-            return loginResponse.access();
-        });
+        LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
+        SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
+        String accessToken = loginResponse.access();
 
         UpdateUserBodyModel updateUserData = new UpdateUserBodyModel(td.username, td.firstName, td.lastName, td.email);
         SuccessfulUpdateUserResponseModel responseUpdateUser = api.updateUser().updateUserWithPatch(updateUserData, accessToken);
@@ -83,11 +79,9 @@ public class UpdateUserTests extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
         api.registration().registerUser(registrationData);
 
-        String accessToken = step("Авторизация и получение access token", () -> {
-            LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
-            SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
-            return loginResponse.access();
-        });
+        LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
+        SuccessfulLoginResponseModel loginResponse = api.login().loginUser(loginData);
+        String accessToken = loginResponse.access();
 
         PartialUpdateUserBodyModel updateUserData = new PartialUpdateUserBodyModel(td.username, td.email);
         SuccessfulUpdateUserResponseModel responseUpdateUser = api.updateUser().partiallyUpdateUserWithPatch(updateUserData, accessToken);
@@ -107,11 +101,9 @@ public class UpdateUserTests extends TestBase {
         RegistrationBodyModel registrationData = new RegistrationBodyModel(td.username, td.password);
         api.registration().registerUser(registrationData);
 
-        String accessToken = step("Авторизация и получение access token", () -> {
-            LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
-            SuccessfulLoginResponseModel responseLogin = api.login().loginUser(loginData);
-            return responseLogin.access();
-        });
+        LoginBodyModel loginData = new LoginBodyModel(td.username, td.password);
+        SuccessfulLoginResponseModel responseLogin = api.login().loginUser(loginData);
+        String accessToken = responseLogin.access();
 
         PartialUpdateUserBodyModel updateUserData = new PartialUpdateUserBodyModel(td.username, td.email);
         UnsuccessfulPartialUpdateUserResponseModel responseUpdateUser =
