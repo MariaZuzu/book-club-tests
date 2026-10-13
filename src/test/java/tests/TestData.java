@@ -21,6 +21,11 @@ public class TestData {
             EXPECTED_TOKEN_NOT_VALID_CODE = "token_not_valid",
             EXPECTED_UNAUTHORIZED_ERROR = "Authentication credentials were not provided.";
 
+    public static final String LOGIN_ID = "2";
+    public static final String LOGIN_USERNAME = "user8";
+    public static final String LOGIN_PASSWORD = "user8";
+    public static final String LOGIN_WRONG_PASSWORD = "qaguru1234";
+
     public static Faker faker = new Faker();
 
     public static String

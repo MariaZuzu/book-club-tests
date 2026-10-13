@@ -6,6 +6,9 @@ public class ApiClient {
     private final LoginApiClient loginApiClient = new LoginApiClient();
     private final LogoutApiClient logoutApiClient = new LogoutApiClient();
     private final UpdateUserApiClient updateUserApiClient = new UpdateUserApiClient();
+    public final ClubsApiClient clubs = new ClubsApiClient();
+    public final AuthApiClient auth = new AuthApiClient();
+    public final UsersApiClient users = new UsersApiClient();
 
     public RegistrationApiClient registration() {
         return registrationApiClient;
