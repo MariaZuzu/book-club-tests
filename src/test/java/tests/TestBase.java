@@ -1,6 +1,5 @@
 package tests;
 
-import allure.Attach;
 import api.ApiClient;
 import com.codeborne.selenide.Configuration;
 import com.codeborne.selenide.logevents.SelenideLogger;
