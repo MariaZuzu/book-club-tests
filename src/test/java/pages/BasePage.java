@@ -25,11 +25,13 @@ public class BasePage {
 
         // register user
         RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
-        SuccessfulRegistrationResponseModel registrationResponse = api.users.register(registrationData);
+//        SuccessfulRegistrationResponseModel registrationResponse = api.users.register(registrationData);
+        SuccessfulRegistrationResponseModel registrationResponse = api.registrationApiClient.registerUser(registrationData);
 
         // login user
         LoginBodyModel loginData = new LoginBodyModel(username, password);
-        SuccessfulLoginResponseModel loginResponse = api.auth.login(loginData);
+//        SuccessfulLoginResponseModel loginResponse = api.auth.login(loginData);
+        SuccessfulLoginResponseModel loginResponse = api.loginApiClient.loginUser(loginData);
 
         UserData userData = new UserData(
                 registrationResponse.id(),
@@ -53,7 +55,7 @@ public class BasePage {
     @Step("[UI] Открытие страницы с существующим пользователем")
     public void openBlankPageWithExistingUser() {
         LoginBodyModel loginData = new LoginBodyModel(LOGIN_USERNAME, LOGIN_PASSWORD);
-        SuccessfulLoginResponseModel loginResponse = api.auth.login(loginData);
+        SuccessfulLoginResponseModel loginResponse = api.loginApiClient.loginUser(loginData);
 
         String accessToken = loginResponse.access();
         String refreshToken = loginResponse.refresh();

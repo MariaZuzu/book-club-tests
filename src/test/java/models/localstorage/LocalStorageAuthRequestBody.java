@@ -1,5 +1,10 @@
 package models.localstorage;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import tools.jackson.core.JacksonException;
+
 public record LocalStorageAuthRequestBody (
         @JsonProperty("user") UserData user,
         @JsonProperty("accessToken") String access,
@@ -11,7 +16,7 @@ public record LocalStorageAuthRequestBody (
     public String toJson() {
         try {
             return JSON.writeValueAsString(this);
-        } catch (JacksonException e) {
+        } catch (JacksonException | JsonProcessingException e) {
             throw new RuntimeException(e);
         }
     }

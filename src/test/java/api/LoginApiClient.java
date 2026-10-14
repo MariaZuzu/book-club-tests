@@ -16,7 +16,8 @@ public class LoginApiClient {
                 .post("/auth/token/")
                 .then()
                 .spec(successfulLoginResponseSpec)
-                .extract().as(SuccessfulLoginResponseModel.class);
+                .extract()
+                .as(SuccessfulLoginResponseModel.class);
     }
 
     @Step("Ошибка при авторизации с неверным password")
