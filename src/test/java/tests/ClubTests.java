@@ -113,10 +113,10 @@ public class ClubTests extends TestBase {
     public void cantLeaveClubAsAdminTest_with_login_by_api(){
         // register user
         RegistrationBodyModel registrationData = new RegistrationBodyModel(username, password);
-        SuccessfulRegistrationResponseModel registrationResponse = api.users.register(registrationData);
+        SuccessfulRegistrationResponseModel registrationResponse = api.registrationApiClient.registerUser(registrationData);
         // login user
         LoginBodyModel loginData = new LoginBodyModel(username, password);
-        SuccessfulLoginResponseModel loginResponse = api.auth.login(loginData);
+        SuccessfulLoginResponseModel loginResponse = api.loginApiClient.loginUser(loginData);
 
         String accessToken = loginResponse.access();
         String refreshToken = loginResponse.refresh();
