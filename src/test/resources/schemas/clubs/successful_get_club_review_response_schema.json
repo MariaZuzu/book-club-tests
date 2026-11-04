@@ -1,0 +1,33 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "required": [
+    "id",
+    "club",
+    "user",
+    "review",
+    "assessment",
+    "readPages",
+    "created",
+    "modified"
+  ],
+  "properties": {
+    "id": { "type": "integer" },
+    "club": { "type": "integer" },
+    "user": {
+      "type": "object",
+      "required": ["id", "username"],
+      "properties": {
+        "id": { "type": "integer" },
+        "username": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "review": { "type": "string" },
+    "assessment": { "type": "integer" },
+    "readPages": { "type": "integer" },
+    "created": { "type": "string" },
+    "modified": { "type": ["string", "null"] }
+  },
+  "additionalProperties": true
+}

@@ -13,6 +13,10 @@ def restAssuredVersion = "6.0.0",
     selenideVersion = "7.13.0",
     allureVersion = "2.32.0",
     junitVersion = "5.14.3",
+    shemaValidatorVersion = "6.0.0",
+    jacksonVersion = "3.1.0",
+    datafakerVersion = "2.5.4",
+    assertjVersion = "3.27.7",
     slf4jVersion = "2.0.17"
 
 allure {
