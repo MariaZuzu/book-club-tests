@@ -9,5 +9,5 @@ public record ClubReviewListModel(
         Integer count,
         String next,
         String previous,
-        List<ClubModel> results
+        List<ClubReviewModel> results
 ) {}

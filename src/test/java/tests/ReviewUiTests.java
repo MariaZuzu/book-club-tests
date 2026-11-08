@@ -134,11 +134,41 @@ public class ReviewUiTests extends TestBase {
         // 6. Открытие страницы созданного клуба
         open("/clubs/" + club.id());
 
-        ClubReviewListModel getClubReviewList = api.clubs.getClubReviewList(club.id(), 1, 10, accessToken);
-
         // 7. Проверка, что отзыв отображается на странице клуба
         element(".club-content").shouldBe(visible);
 
+    }
+
+    @Test
+    @DisplayName("Отображение списка отзывов о клубе GET /clubs/reviews/")
+    public void reviewsListDisplayOnClubPageNewUser_fix() {
+
+        // 1. Регистрация нового пользователя через API
+        SuccessfulRegistrationResponseModel registrationResponse = api.registrationApiClient.registerUser(new RegistrationBodyModel(username, password));
+
+        // 2. Логин пользователя через API и получение токенов
+        SuccessfulLoginResponseModel loginResponse = api.loginApiClient.loginUser(new LoginBodyModel(username, password));
+        String accessToken = loginResponse.access();
+
+        // 3. Создание клуба через API
+        ClubModel club = api.clubs.createRandomClub(accessToken);
+
+        // 4. Создание отзыва к клубу через API
+        models.clubs.ClubReviewWriteBodyModel body = ClubsTestData.randomClubReviewBody(club.id());
+        ClubReviewModel createdReview = api.clubs.createClubReview(body, accessToken);
+
+        // 5. Вход в UI через localStorage (подкладываем сессию)
+        open("/favicon.ico");
+
+        UserData userData = new UserData(registrationResponse.id(), registrationResponse.username(), registrationResponse.firstName(), registrationResponse.lastName(), registrationResponse.email(), registrationResponse.remoteAddr());
+        LocalStorageAuthRequestBody authBody = new LocalStorageAuthRequestBody(userData, loginResponse.access(), loginResponse.refresh(), true);
+        Selenide.localStorage().setItem("book_club_auth", authBody.toJson());
+
+        // 6. Открытие страницы созданного клуба
+        open("/clubs/" + club.id());
+
+        // 7. Проверка, что отзыв отображается на странице клуба
+        element(".club-content").shouldHave(text(createdReview.review()));
     }
 
     @Test
@@ -152,9 +182,9 @@ public class ReviewUiTests extends TestBase {
 
         ClubReviewListModel getClubReviewList = api.clubs.getClubReviewList(2, 1, 10, accessToken);
 
+        String expectedText = getClubReviewList.results().get(0).review();
         open("/clubs/2");
-
-        element(".club-content").shouldBe(visible);
+        element(".club-content").shouldHave(text(expectedText));
     }
 }
 

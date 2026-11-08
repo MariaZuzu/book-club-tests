@@ -89,8 +89,11 @@ public class ClubsApiClient {
     public ClubReviewListModel getClubReviewList(int clubId, int pageNumber, int pageSize, String accessToken) {
         return given(clubsRequestSpec)
                 .auth().oauth2(accessToken)
+                .queryParam("club", clubId)
+                .queryParam("page", pageNumber)
+                .queryParam("page_size", pageSize)
                 .when()
-                .get("/clubs/reviews/" + "?club=" + clubId + "&page=" + pageNumber + "&page_size=" + pageSize)
+                .get("/clubs/reviews/")
                 .then()
                 .spec(successfulGetClubReviewListResponseSpec)
                 .extract().as(ClubReviewListModel.class);
