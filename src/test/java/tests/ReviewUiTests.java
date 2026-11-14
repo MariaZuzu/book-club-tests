@@ -120,7 +120,7 @@ public class ReviewUiTests extends TestBase {
         // 3. Создание клуба через API
         ClubModel club = api.clubs.createRandomClub(accessToken);
 
-                // 4. Создание отзыва к клубу через API
+        // 4. Создание отзыва к клубу через API
         models.clubs.ClubReviewWriteBodyModel body = ClubsTestData.randomClubReviewBody(club.id());
         api.clubs.createClubReview(body, accessToken);
 
@@ -133,7 +133,7 @@ public class ReviewUiTests extends TestBase {
 
         // 6. Открытие страницы созданного клуба
         clubPage.openPageById(club.id().toString())
-                // 7. Проверка, что отзыв отображается на странице клуба
+        // 7. Проверка, что отзыв отображается на странице клуба
                 .checkReviewSnippetVisible(body.review());
 
     }
@@ -165,7 +165,7 @@ public class ReviewUiTests extends TestBase {
 
         // 6. Открытие страницы созданного клуба
         clubPage.openPageById(club.id().toString())
-                // 7. Проверка, что отзыв отображается на странице клуба
+        // 7. Проверка, что отзыв отображается на странице клуба
                 .checkReviewSnippetVisible(body.review());
     }
 
